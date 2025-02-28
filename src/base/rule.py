@@ -2,7 +2,7 @@ from typing import List
 from .predicate import Predicate
 
 class Rule:
-    def __init__(self, conclusion=None, predicates: List[Predicate] = None):
+    def __init__(self, conclusion: Predicate = None, predicates: List[Predicate] = None):
         self.conclusion = conclusion
         self.predicates = predicates if predicates is not None else []
         self.result = False

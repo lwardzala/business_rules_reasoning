@@ -1,5 +1,6 @@
 from ..base import Predicate
-from ..base.operators import OperatorType, Between, GreaterOrEqual, GreaterThan, LesserOrEqual, LesserThan, NotBetween, NotSubset, Subset
+from ..base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
+from ..base.operator_enums import OperatorType
 
 class DeductivePremise(Predicate):
     def __init__(self, left_term=None, right_term=None, operator=None):
@@ -20,8 +21,8 @@ class DeductivePremise(Predicate):
                 OperatorType.BETWEEN: Between,
                 OperatorType.GREATER_OR_EQUAL: GreaterOrEqual,
                 OperatorType.GREATER_THAN: GreaterThan,
-                OperatorType.LESSER_OR_EQUAL: LesserOrEqual,
-                OperatorType.LESSER_THAN: LesserThan,
+                OperatorType.LESS_OR_EQUAL: LessOrEqual,
+                OperatorType.LESS_THAN: LessThan,
                 OperatorType.NOT_BETWEEN: NotBetween,
                 OperatorType.NOT_SUBSET: NotSubset,
                 OperatorType.SUBSET: Subset
