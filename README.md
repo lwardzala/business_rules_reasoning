@@ -182,7 +182,7 @@ age < 5 -> passenger = "toddler"
         "leftTerm": {
           "id": "age"
         },
-        "operator": "LesserThan",
+        "operator": "LessThan",
         "rightTerm": {
           "id": "age",
           "value": 18
@@ -210,7 +210,7 @@ age < 5 -> passenger = "toddler"
         "leftTerm": {
           "id": "age"
         },
-        "operator": "LesserThan",
+        "operator": "LessThan",
         "rightTerm": {
           "id": "age",
           "value": 5
@@ -252,7 +252,7 @@ knowledge_base = KnowledgeBaseBuilder() \
             .set_value("child")
             .unwrap())
         .add_predicate(PredicateBuilder()
-            .configure_predicate("age", OperatorType.LESSER_THAN, 18)
+            .configure_predicate("age", OperatorType.LESS_THAN, 18)
             .unwrap())
         .add_predicate(PredicateBuilder()
             .configure_predicate("age", OperatorType.GREATER_OR_EQUAL, 5)
@@ -264,7 +264,7 @@ knowledge_base = KnowledgeBaseBuilder() \
             .set_value("toddler")
             .unwrap())
         .add_predicate(PredicateBuilder()
-            .configure_predicate("age", OperatorType.LESSER_THAN, 5)
+            .configure_predicate("age", OperatorType.LESS_THAN, 5)
             .unwrap())
         .unwrap()) \
     .unwrap()
