@@ -78,8 +78,8 @@ Will be:
 
 With PredicateBuilder:
 ```python
-from business_rules_reasoning.knowledge_builder import PredicateBuilder
-from business_rules_reasoning.base.operators import OperatorType
+from business_rules_reasoning.deductive import PredicateBuilder
+from business_rules_reasoning import OperatorType
 
 predicate = PredicateBuilder() \
     .configure_predicate("age", OperatorType.GREATER_OR_EQUAL, 18) \
@@ -125,8 +125,8 @@ Will be:
 
 With RuleBuilder:
 ```python
-from business_rules_reasoning.knowledge_builder import RuleBuilder, VariableBuilder, PredicateBuilder
-from business_rules_reasoning.base.operators import OperatorType
+from business_rules_reasoning.deductive import RuleBuilder, VariableBuilder, PredicateBuilder
+from business_rules_reasoning import OperatorType
 
 rule = RuleBuilder() \
     .set_conclusion(VariableBuilder()
@@ -230,8 +230,8 @@ age < 5 -> passenger = "toddler"
 
 With KnowledgeBaseBuilder:
 ```python
-from business_rules_reasoning.knowledge_builder import KnowledgeBaseBuilder, RuleBuilder, VariableBuilder, PredicateBuilder
-from business_rules_reasoning.base.operators import OperatorType
+from business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, VariableBuilder, PredicateBuilder
+from business_rules_reasoning import OperatorType
 
 knowledge_base = KnowledgeBaseBuilder() \
     .set_id("knowledgeBase1") \
@@ -290,9 +290,9 @@ Value types are comparable with each other.
 - Equal;
 - NotEqual;
 - GreaterThan;
-- LesserThan;
+- LessThan;
 - GreaterOrEqual;
-- LesserOrEqual;
+- LessOrEqual;
 - IsIn (inversion of Contains);
 - NotIn (negation of IsIn);
 - Between (ex. "4 Between [3, 5]" is true);
@@ -350,17 +350,6 @@ The Reasoning System can be used whenever you want to automate a decision proces
 3. You have a process with several workflows to be executed. The next workflow depends on result of the previous one;
 
 4. You are a software developer and want to improve code of a service that contains multi-level "if" clauses. 
-
-## Future functionalities
-### Coming soon
-- Shared variable collection (reasoning results and predicate variables can be shared between different reasoning tasks)
-- Integration with PostgreSQL/MS SQL databases;
-- Swagger;
-
-### Long term plans
-- JavaScript library of the Reasoning.Core;
-- Graphic interface for composing and modifying knowledge bases;
-- Scalability;
 
 ## Authors
 - Lukasz Wardzala - [github](https://github.com/lwardzala)

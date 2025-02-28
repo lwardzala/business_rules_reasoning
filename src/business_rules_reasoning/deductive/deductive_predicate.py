@@ -1,9 +1,10 @@
 from ..base import Predicate
 from ..base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
 from ..base.operator_enums import OperatorType
+from ..base.variable import Variable
 
 class DeductivePredicate(Predicate):
-    def __init__(self, left_term=None, right_term=None, operator=None):
+    def __init__(self, left_term: Variable = None, right_term: Variable = None, operator: OperatorType = None):
         self.left_term = left_term
         self.right_term = right_term
         self.operator = operator
