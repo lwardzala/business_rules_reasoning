@@ -1,9 +1,9 @@
 import unittest
-from src.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
-from src.base import ReasoningProcess, KnowledgeBase, Rule, Variable
-from src.deductive.deductive_predicate import DeductivePremise
-from src.deductive.reasoning_service import ReasoningService
-from src.base import OperatorType
+from src.business_rules_reasoning.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
+from src.business_rules_reasoning.base import ReasoningProcess, KnowledgeBase, Rule, Variable
+from src.business_rules_reasoning.deductive.deductive_predicate import DeductivePredicate
+from src.business_rules_reasoning.deductive.reasoning_service import ReasoningService
+from src.business_rules_reasoning.base import OperatorType
 
 class TestReasoningService(unittest.TestCase):
     def test_start_reasoning(self):
@@ -11,8 +11,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -31,8 +31,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -45,8 +45,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -60,8 +60,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -75,8 +75,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -88,8 +88,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -101,8 +101,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=None)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -115,8 +115,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=5)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb
@@ -129,8 +129,8 @@ class TestReasoningService(unittest.TestCase):
         kb = KnowledgeBase()
         left_term = Variable(id="1", value=5)
         right_term = Variable(id="2", value=10)
-        predicate = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
-        conclusion = DeductivePremise(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        predicate = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
+        conclusion = DeductivePredicate(left_term=left_term, right_term=right_term, operator=OperatorType.LESS_THAN)
         rule = Rule(conclusion=conclusion, predicates=[predicate])
         kb.rule_set.append(rule)
         rp.knowledge_base = kb

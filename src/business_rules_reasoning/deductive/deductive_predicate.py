@@ -2,7 +2,7 @@ from ..base import Predicate
 from ..base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
 from ..base.operator_enums import OperatorType
 
-class DeductivePremise(Predicate):
+class DeductivePredicate(Predicate):
     def __init__(self, left_term=None, right_term=None, operator=None):
         self.left_term = left_term
         self.right_term = right_term

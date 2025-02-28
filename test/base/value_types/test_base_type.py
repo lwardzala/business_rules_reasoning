@@ -1,5 +1,5 @@
 import unittest
-from src.base.value_types.base_type import BaseType
+from src.business_rules_reasoning.base.value_types.base_type import BaseType
 
 class TestBaseType(unittest.TestCase):
     def test_initialization(self):

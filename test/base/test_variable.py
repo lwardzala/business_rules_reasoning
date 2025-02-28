@@ -1,7 +1,7 @@
 import unittest
-from src.base.variable import Variable
-from src.base.value_types.base_type import BaseType
-from src.base.value_types.list_type import ListType
+from src.business_rules_reasoning.base.variable import Variable
+from src.business_rules_reasoning.base.value_types.base_type import BaseType
+from src.business_rules_reasoning.base.value_types.list_type import ListType
 
 class TestVariable(unittest.TestCase):
     def test_initialization(self):

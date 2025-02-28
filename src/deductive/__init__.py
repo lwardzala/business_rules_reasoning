@@ -1,1 +1,0 @@
-from .deductive_predicate import DeductivePremise

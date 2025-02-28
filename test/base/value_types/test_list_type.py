@@ -1,6 +1,6 @@
 import unittest
-from src.base.value_types.list_type import ListType
-from src.base.value_types.base_type import BaseType
+from src.business_rules_reasoning.base.value_types.list_type import ListType
+from src.business_rules_reasoning.base.value_types.base_type import BaseType
 
 class TestListType(unittest.TestCase):
     def test_initialization(self):
@@ -22,10 +22,10 @@ class TestListType(unittest.TestCase):
         list_type = ListType([1, 2, 3])
         self.assertEqual(str(list_type), "{1;2;3}")
 
-    # def test_between(self):
-    #     list_type = ListType([BaseType(1), BaseType(10)])
-    #     self.assertTrue(list_type.between(BaseType(5)))
-    #     self.assertFalse(list_type.between(BaseType(11)))
+    def test_between(self):
+        list_type = ListType([1, 10])
+        self.assertTrue(list_type.between(BaseType(5)))
+        self.assertFalse(list_type.between(BaseType(11)))
 
     def test_contains(self):
         list_type = ListType([1, 2, 3])

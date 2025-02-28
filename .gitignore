@@ -2,3 +2,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .vscode/
+
+.Python
+build/
+dist/

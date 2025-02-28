@@ -1,6 +1,6 @@
 import unittest
-from src.base.value_types import BaseType, ListType
-from src.base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
+from src.business_rules_reasoning.base.value_types import BaseType, ListType
+from src.business_rules_reasoning.base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
 
 class TestOperators(unittest.TestCase):
     def test_between(self):

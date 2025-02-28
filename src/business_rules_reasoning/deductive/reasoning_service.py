@@ -1,6 +1,6 @@
 from ..base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
 from ..base import ReasoningProcess, Rule
-from .deductive_predicate import DeductivePremise
+from .deductive_predicate import DeductivePredicate
 
 class ReasoningService:
     @staticmethod
@@ -39,7 +39,7 @@ class ReasoningService:
         variables = ReasoningService.analyze_variables_frequency(reasoning_process)
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
-                if isinstance(predicate, DeductivePremise):
+                if isinstance(predicate, DeductivePredicate):
                     predicate.left_term.frequency = next(variable.frequency for variable in variables if variable.id == predicate.left_term.id)
                     predicate.left_term.value = None
         return result
@@ -53,7 +53,7 @@ class ReasoningService:
         result = []
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
-                if isinstance(predicate, DeductivePremise) and predicate.left_term.is_empty() and all(variable.id != predicate.left_term.id for variable in result):
+                if isinstance(predicate, DeductivePredicate) and predicate.left_term.is_empty() and all(variable.id != predicate.left_term.id for variable in result):
                     result.append(predicate.left_term)
         result.sort()
         return result
@@ -63,7 +63,7 @@ class ReasoningService:
         result = []
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
-                if isinstance(predicate, DeductivePremise) and predicate.left_term not in result:
+                if isinstance(predicate, DeductivePredicate) and predicate.left_term not in result:
                     predicate.left_term.frequency = 0
                     result.append(predicate.left_term)
                 index = next((i for i, item in enumerate(result) if item.id == predicate.left_term.id), -1)
