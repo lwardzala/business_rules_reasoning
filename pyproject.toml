@@ -3,6 +3,7 @@ name = "business_rules_reasoning"
 version = "0.1.0"
 authors = [{ name="Lukasz Wardzala <https://github.com/lwardzala>" }]
 description = "A library for defining and evaluating business rules using various reasoning methods."
+keywords = ["reasoning", "business rules", "infernce engine", "logic", "horn's inference"]
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
