@@ -20,9 +20,7 @@ class TestJsonSerializer(unittest.TestCase):
         knowledge_base.rule_set.append(adult_rule)
 
         # Create reasoning process
-        reasoning_process = ReasoningProcess()
-        reasoning_process.reasoning_method = ReasoningMethod.DEDUCTION
-        reasoning_process.knowledge_base = knowledge_base
+        reasoning_process = ReasoningProcess(reasoning_method=ReasoningMethod.DEDUCTION, knowledge_base=knowledge_base)
         reasoning_process.state = ReasoningState.INITIALIZED
         reasoning_process.reasoned_items = []
         reasoning_process.evaluation_message = EvaluationMessage.NONE

@@ -18,3 +18,7 @@ class ReasoningMethod(Enum):
     HYPOTHESIS_TESTING = "HYPOTHESIS_TESTING"
     FUZZY_MAMDANI = "FUZZY_MAMDANI"
     FUZZY_SUGENO = "FUZZY_SUGENO"
+
+class ReasoningType(Enum):
+    CRISP = "CRISP"
+    FUZZY = "FUZZY"

@@ -9,9 +9,8 @@ from .base import OperatorType
 
 def deserialize_reasoning_process(data: str) -> ReasoningProcess:
     data_dict = json.loads(data)
-    reasoning_process = ReasoningProcess()
-    reasoning_process.reasoning_method = ReasoningMethod[data_dict["reasoning_method"]]
-    reasoning_process.knowledge_base = deserialize_knowledge_base(json.dumps(data_dict["knowledge_base"]))
+    knowledge_base = deserialize_knowledge_base(json.dumps(data_dict["knowledge_base"]))
+    reasoning_process = ReasoningProcess(reasoning_method=ReasoningMethod[data_dict["reasoning_method"]], knowledge_base=knowledge_base)
     reasoning_process.state = ReasoningState[data_dict["state"]]
     reasoning_process.reasoned_items = data_dict["reasoned_items"]
     reasoning_process.evaluation_message = EvaluationMessage[data_dict["evaluation_message"]]

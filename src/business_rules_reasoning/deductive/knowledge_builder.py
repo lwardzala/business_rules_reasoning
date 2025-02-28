@@ -1,12 +1,13 @@
 from ..base import KnowledgeBase, Rule, Predicate, Variable
 from . import DeductivePredicate
-from ..base import OperatorType
+from ..base import OperatorType, ReasoningType
 
 class KnowledgeBaseBuilder:
     def __init__(self):
         self.knowledge_base = KnowledgeBase()
         self.knowledge_base.rule_set = []
         self.knowledge_base.properties = {}
+        self.knowledge_base.type = ReasoningType.CRISP
 
     def set_id(self, id):
         self.knowledge_base.id = id
