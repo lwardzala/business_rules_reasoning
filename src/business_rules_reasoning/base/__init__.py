@@ -5,3 +5,4 @@ from .predicate import Predicate
 from .reasoning_process import ReasoningProcess
 from .reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 from .operator_enums import OperatorType
+from .reasoning_service import ReasoningService

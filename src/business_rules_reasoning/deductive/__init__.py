@@ -1,3 +1,3 @@
 from .deductive_predicate import DeductivePredicate
 from .knowledge_builder import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
-from .reasoning_service import ReasoningService
+from .deductive_reasoning_service import DeductiveReasoningService

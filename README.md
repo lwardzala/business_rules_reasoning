@@ -1,6 +1,6 @@
 # Business Rules Reasoning System
 
-It is the Python implementation of the [Business Rules Reasoning System](https://github.com/lwardzala/Business-Rules-Reasoning-System).
+This is the Python implementation of the [Business Rules Reasoning System](https://github.com/lwardzala/Business-Rules-Reasoning-System).
 It is a simple reasoning tool based on the implication form of the Horn clause.
 Provides integration between various systems and supports workflows.
 

@@ -49,6 +49,9 @@ class DeductivePredicate(Predicate):
     def set_variables(self, variable_collection):
         self.left_term.value = variable_collection[self.left_term.id]
 
+    def get_expected_variable(self):
+        return self.right_term
+
     def get_result(self):
         return self.result
 

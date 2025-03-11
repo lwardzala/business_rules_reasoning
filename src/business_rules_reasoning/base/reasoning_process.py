@@ -1,12 +1,14 @@
 from .reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
+from typing import List
 from .knowledge_base import KnowledgeBase
+from .variable import Variable
 
 class ReasoningProcess:
     def __init__(self, reasoning_method: ReasoningMethod, knowledge_base: KnowledgeBase, options=None):
         self.reasoning_method = reasoning_method
         self.knowledge_base = knowledge_base
         self.state = ReasoningState.INITIALIZED
-        self.reasoned_items = []
+        self.reasoned_items: List[Variable] = []
         self.evaluation_message = EvaluationMessage.NONE
         self.options = options
         self.reasoning_error_message = None

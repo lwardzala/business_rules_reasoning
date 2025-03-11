@@ -1,20 +1,22 @@
+from ..base.reasoning_service import ReasoningService
+from ..base.reasoning_process import ReasoningProcess
 from ..base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
-from ..base import ReasoningProcess, Rule
+from ..base import Rule
 from .deductive_predicate import DeductivePredicate
 
-class ReasoningService:
+class DeductiveReasoningService(ReasoningService):
     @staticmethod
     def start_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
-        result = ReasoningService.clear_reasoning(reasoning_process)
+        result = DeductiveReasoningService.clear_reasoning(reasoning_process)
         result.state = ReasoningState.STARTED
-        return ReasoningService.continue_reasoning(result)
+        return DeductiveReasoningService.continue_reasoning(result)
 
     @staticmethod
     def continue_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
         if reasoning_process.reasoning_method == ReasoningMethod.DEDUCTION:
-            return ReasoningService.deduction(reasoning_process)
+            return DeductiveReasoningService.deduction(reasoning_process)
         elif reasoning_process.reasoning_method == ReasoningMethod.HYPOTHESIS_TESTING:
-            return ReasoningService.hypothesis_testing(reasoning_process)
+            return DeductiveReasoningService.hypothesis_testing(reasoning_process)
         else:
             return None
 
@@ -35,8 +37,8 @@ class ReasoningService:
 
     @staticmethod
     def clear_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
-        result = ReasoningService.reset_reasoning(reasoning_process)
-        variables = ReasoningService.analyze_variables_frequency(reasoning_process)
+        result = DeductiveReasoningService.reset_reasoning(reasoning_process)
+        variables = DeductiveReasoningService.analyze_variables_frequency(reasoning_process)
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
                 if isinstance(predicate, DeductivePredicate):
@@ -46,7 +48,7 @@ class ReasoningService:
 
     @staticmethod
     def get_all_missing_variable_ids(reasoning_process: ReasoningProcess) -> list:
-        return [variable.id for variable in ReasoningService.get_all_missing_variables(reasoning_process)]
+        return [variable.id for variable in DeductiveReasoningService.get_all_missing_variables(reasoning_process)]
 
     @staticmethod
     def get_all_missing_variables(reasoning_process: ReasoningProcess) -> list:

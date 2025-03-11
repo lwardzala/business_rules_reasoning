@@ -32,3 +32,7 @@ class Predicate(ABC):
     @abstractmethod
     def reset_evaluation(self):
         pass
+
+    @abstractmethod
+    def get_expected_variable(self):
+        pass
