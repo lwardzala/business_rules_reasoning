@@ -5,8 +5,9 @@ from typing import Callable, List
 
 from .variable_source import VariableSource
 from .reasoning_action import ReasoningAction
-from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningService
+from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningService, ReasoningType
 from ..json_deserializer import deserialize_knowledge_base, deserialize_reasoning_process
+from ..deductive import DeductiveReasoningService
 
 class OrchestratorStatus(Enum):
     INITIALIZED = 1
@@ -35,7 +36,7 @@ class BaseOrchestrator(ABC):
         pass
 
     def start_orchestration(self):
-        if self.status != None:
+        if self.status is not None:
             return
         
         if self.inference_session_id is None:
@@ -52,7 +53,6 @@ class BaseOrchestrator(ABC):
         self.reasoning_process = None
         self.start_orchestration()
 
-
     def retrieve_knowledge_base(self) -> List[KnowledgeBase]:
         knowledge_base_jsons = self.knowledge_base_retriever()
         self.knowledge_bases = [deserialize_knowledge_base(json.dumps(kb_json)) for kb_json in knowledge_base_jsons]
@@ -64,3 +64,11 @@ class BaseOrchestrator(ABC):
         if self.reasoning_process.state == ReasoningState.FINISHED:
             self.reset_orchestration() # TODO: think about: start new orchestration or stay in finished state?
         return
+
+    def get_reasoning_service(self) -> ReasoningService:
+        if self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.CRISP:
+            return DeductiveReasoningService()
+        elif self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.FUZZY:
+            raise NotImplementedError("Fuzzy reasoning is not implemented yet")
+        else:
+            raise ValueError("Unknown reasoning type")

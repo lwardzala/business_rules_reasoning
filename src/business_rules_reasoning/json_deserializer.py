@@ -4,7 +4,7 @@ from .base.knowledge_base import KnowledgeBase
 from .base.rule import Rule
 from .deductive import DeductivePredicate
 from .base.variable import Variable
-from .base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
+from .base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 from .base import OperatorType
 
 def deserialize_reasoning_process(data: str) -> ReasoningProcess:
@@ -26,6 +26,7 @@ def deserialize_knowledge_base(data: str) -> KnowledgeBase:
     knowledge_base.description = data_dict["description"]
     knowledge_base.rule_set = [deserialize_rule(json.dumps(rule)) for rule in data_dict["rule_set"]]
     knowledge_base.properties = data_dict["properties"]
+    knowledge_base.reasoning_type = ReasoningType[data_dict["reasoning_type"]]
     return knowledge_base
 
 def deserialize_rule(data: str) -> Rule:

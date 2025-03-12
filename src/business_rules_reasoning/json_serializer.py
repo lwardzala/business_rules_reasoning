@@ -25,7 +25,8 @@ class ReasoningProcessEncoder(json.JSONEncoder):
                 "name": obj.name,
                 "description": obj.description,
                 "rule_set": obj.rule_set,
-                "properties": obj.properties
+                "properties": obj.properties,
+                "reasoning_type": obj.reasoning_type.name
             }
         elif isinstance(obj, Rule):
             return {
