@@ -29,7 +29,7 @@ class BaseOrchestrator(ABC):
         self.reasoning_process: ReasoningProcess = None
 
     @abstractmethod
-    def next_step(self) -> str:
+    def _next_step(self):
         pass
 
     @abstractmethod
@@ -55,14 +55,14 @@ class BaseOrchestrator(ABC):
         if self.reasoning_process is not None:
             self.status = OrchestratorStatus.WAITING_FOR_QUERY
 
-        if self.reasoning_process.evaluation_message == EvaluationMessage.MISSING_VALUES:
-            self.status = OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES
+            if self.reasoning_process.evaluation_message == EvaluationMessage.MISSING_VALUES:
+                self.status = OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES
 
-        if self.reasoning_process.evaluation_message == EvaluationMessage.ERROR:
-            self.status = OrchestratorStatus.INFERENCE_ERROR
+            if self.reasoning_process.evaluation_message == EvaluationMessage.ERROR:
+                self.status = OrchestratorStatus.INFERENCE_ERROR
 
-        if self.reasoning_process.state == ReasoningState.FINISHED:
-            self.status = OrchestratorStatus.INFERENCE_FINISHED
+            if self.reasoning_process.state == ReasoningState.FINISHED:
+                self.status = OrchestratorStatus.INFERENCE_FINISHED
 
     def reset_orchestration(self):
         self.status = None

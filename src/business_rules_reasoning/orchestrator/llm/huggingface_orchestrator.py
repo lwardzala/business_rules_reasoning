@@ -41,10 +41,10 @@ class PromptTemplates:
     )
 
 class HuggingFaceOrchestrator(BaseOrchestrator):
-    def __init__(self, model_name: str, knowledge_base_retriever: Callable, inference_state_retriever: Callable, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", **kwargs):
+    def __init__(self, model_name: str, knowledge_base_retriever: Callable, inference_state_retriever: Callable, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", tokenizer=None, model=None, **kwargs):
         super().__init__(knowledge_base_retriever, inference_state_retriever, inference_session_id, actions, variable_sources)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
+        self.tokenizer = tokenizer or AutoTokenizer.from_pretrained(model_name)
+        self.model = model or AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
         self.query_history: List[Dict[str, str]] = []
         self.prompt_templates = prompt_templates
         self.agent_type: str = agent_type
