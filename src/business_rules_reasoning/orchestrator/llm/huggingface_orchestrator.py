@@ -31,6 +31,14 @@ class PromptTemplates:
         "Format the response as follows:\n"
         "question: <your question>"
     )
+    AskForReasoningClarificationTemplate = (
+        "As {agent_type}, you keep conversation with user to clarify what reasoning can be provided.\n"
+        "Possible knowledge bases are:\n"
+        "{knowledge_bases}\n"
+        "Ask the user to clarify the reasoning needed.\n"
+        "Format the response as follows:\n"
+        "question: <your question>"
+    )
 
 class HuggingFaceOrchestrator(BaseOrchestrator):
     def __init__(self, model_name: str, knowledge_base_retriever: Callable, inference_state_retriever: Callable, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", **kwargs):
@@ -84,11 +92,19 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
 
         # TODO: Handle outputs
         if self.status == OrchestratorStatus.WAITING_FOR_QUERY:
-            pass
-            # "The model could not understand what you want to do. Please provide more details to start the deduction."
+            return self._ask_for_reasoning_clarification()
+            
         if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
             missing_variables = ", ".join([f"{var.name}" for var in self.get_reasoning_service().get_all_missing_variables(self.reasoning_process)])
-            pass
+            return self._ask_for_more_information(missing_variables)
+        
+        if self.status == OrchestratorStatus.INFERENCE_ERROR:
+            # TODO: generate answer
+            return "An error occurred during the reasoning process."
+        
+        if self.status == OrchestratorStatus.INFERENCE_FINISHED:
+            # TODO: generate answer
+            return "The reasoning process has been completed."
 
         return ''
 
@@ -127,6 +143,20 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
     def _ask_for_more_information(self, variables: str) -> str:
         context = "\n".join([f"{entry['role']}: {entry['text']}" for entry in self.query_history if entry['role'] in ['user', 'agent']])
         prompt = self.prompt_templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=variables, context=context)
+        response = self._prompt_llm(prompt)
+        
+        # Parse the response
+        lines = response.split('\n')
+        question = None
+        for line in lines:
+            if line.startswith("question:"):
+                question = line.split(":")[1].strip()
+        
+        return question
+
+    def _ask_for_reasoning_clarification(self) -> str:
+        knowledge_bases_info = "\n".join([f"{kb.name} - {kb.description}" for kb in self.knowledge_bases])
+        prompt = self.prompt_templates.AskForReasoningClarificationTemplate.format(agent_type=self.agent_type, knowledge_bases=knowledge_bases_info)
         response = self._prompt_llm(prompt)
         
         # Parse the response
