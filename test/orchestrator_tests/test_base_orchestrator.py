@@ -46,7 +46,11 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
     def test_get_reasoning_service(self):
         self.orchestrator.retrieve_inference_state("test_session_id")
         reasoning_service = self.orchestrator.get_reasoning_service()
-        self.assertEqual(reasoning_service, DeductiveReasoningService)
+
+        reasoning_process = self.orchestrator.reasoning_process
+        self.assertEqual(reasoning_process.state, ReasoningState.INITIALIZED)
+        started_reasoning_process = reasoning_service.start_reasoning(reasoning_process)
+        self.assertEqual(started_reasoning_process.state, ReasoningState.FINISHED)
 
         self.orchestrator.reasoning_process.knowledge_base.reasoning_type = ReasoningType.FUZZY
         with self.assertRaises(NotImplementedError):

@@ -2,7 +2,7 @@ import unittest
 from src.business_rules_reasoning.json_deserializer import deserialize_reasoning_process, deserialize_knowledge_base
 from src.business_rules_reasoning.base import ReasoningProcess, KnowledgeBase, Rule, Variable, OperatorType
 from src.business_rules_reasoning.deductive import DeductivePredicate
-from src.business_rules_reasoning.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
+from src.business_rules_reasoning.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 from src.business_rules_reasoning.json_serializer import serialize_reasoning_process, serialize_knowledge_base
 
 class TestJsonDeserializer(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestJsonDeserializer(unittest.TestCase):
         adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
 
         # Create knowledge base
-        knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories")
+        knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
         knowledge_base.rule_set.append(adult_rule)
 
         # Create reasoning process
@@ -48,7 +48,7 @@ class TestJsonDeserializer(unittest.TestCase):
         adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
 
         # Create knowledge base
-        knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories")
+        knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
         knowledge_base.rule_set.append(adult_rule)
 
         # Serialize and deserialize knowledge base

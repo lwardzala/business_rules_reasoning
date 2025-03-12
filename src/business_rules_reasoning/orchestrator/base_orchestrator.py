@@ -67,7 +67,7 @@ class BaseOrchestrator(ABC):
 
     def get_reasoning_service(self) -> ReasoningService:
         if self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.CRISP:
-            return DeductiveReasoningService()
+            return DeductiveReasoningService
         elif self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.FUZZY:
             raise NotImplementedError("Fuzzy reasoning is not implemented yet")
         else:
