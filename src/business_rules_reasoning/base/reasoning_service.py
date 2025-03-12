@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import List
+from .variable import Variable
 from .reasoning_process import ReasoningProcess
 
 class ReasoningService(ABC):
@@ -29,17 +31,18 @@ class ReasoningService(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_all_missing_variable_ids(reasoning_process: ReasoningProcess) -> list:
+    def get_all_missing_variable_ids(reasoning_process: ReasoningProcess) -> List[str]:
         pass
 
     @staticmethod
     @abstractmethod
-    def get_all_missing_variables(reasoning_process: ReasoningProcess) -> list:
+    def get_all_missing_variables(reasoning_process: ReasoningProcess) -> List[Variable]:
         pass
 
+    # TODO: Do we need this or make it private?
     @staticmethod
     @abstractmethod
-    def analyze_variables_frequency(reasoning_process: ReasoningProcess) -> list:
+    def analyze_variables_frequency(reasoning_process: ReasoningProcess) -> List[Variable]:
         pass
 
     @staticmethod

@@ -1,7 +1,8 @@
+from typing import List
 from ..base.reasoning_service import ReasoningService
 from ..base.reasoning_process import ReasoningProcess
 from ..base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
-from ..base import Rule
+from ..base import Rule, Variable
 from .deductive_predicate import DeductivePredicate
 
 class DeductiveReasoningService(ReasoningService):
@@ -47,11 +48,11 @@ class DeductiveReasoningService(ReasoningService):
         return result
 
     @staticmethod
-    def get_all_missing_variable_ids(reasoning_process: ReasoningProcess) -> list:
+    def get_all_missing_variable_ids(reasoning_process: ReasoningProcess) -> List[str]:
         return [variable.id for variable in DeductiveReasoningService.get_all_missing_variables(reasoning_process)]
 
     @staticmethod
-    def get_all_missing_variables(reasoning_process: ReasoningProcess) -> list:
+    def get_all_missing_variables(reasoning_process: ReasoningProcess) -> List[Variable]:
         result = []
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
@@ -61,7 +62,7 @@ class DeductiveReasoningService(ReasoningService):
         return result
 
     @staticmethod
-    def analyze_variables_frequency(reasoning_process: ReasoningProcess) -> list:
+    def analyze_variables_frequency(reasoning_process: ReasoningProcess) -> List[Variable]:
         result = []
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
