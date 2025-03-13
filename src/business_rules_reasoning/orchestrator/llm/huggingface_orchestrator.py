@@ -1,50 +1,19 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, List, Dict, Tuple, Any
+import re
+import json
 
+from .huggingface_pipeline import HuggingFacePipeline
+from .prompt_templates import PromptTemplates
 from ..base_orchestrator import BaseOrchestrator, OrchestratorStatus
 from ..variable_source import VariableSource
 from ..reasoning_action import ReasoningAction
-from ....business_rules_reasoning import ReasoningState, ReasoningProcess, ReasoningService, ReasoningMethod, Variable
-
-class PromptTemplates:
-    FetchInferenceInstructionsTemplate = (
-        "Given the query: '{text}', determine the appropriate knowledge base id for reasoning and whether it is hypothesis testing or deduction.\n"
-        "Possible knowledge bases are:\n"
-        "{knowledge_bases}\n"
-        "Format the response as follows:\n"
-        "knowledge_base: <knowledge_base_name>\n"
-        "reasoning_method: <hypothesis_testing|deduction>\n"
-        "Use 'hypothesis_testing' if the query asks to validate truth, and 'deduction' if it is to reason all."
-    )
-    # TODO: Exmplain the value formats
-    FetchVariablesTemplate = (
-        "Given the query: '{text}', retrieve the values for the following variables:\n"
-        "{variables}\n"
-        "Format the response as follows:\n"
-        "[variable id] = [variable value]"
-    )
-    AskForMoreInformationTemplate = (
-        "As {agent_type}, you keep conversation with user to retrieve information needed in a reasoning process.\n"
-        "Context from previous messages:\n"
-        "{context}\n"
-        "Ask the user for more information about the following variables: {variables}\n"
-        "Format the response as follows:\n"
-        "question: <your question>"
-    )
-    AskForReasoningClarificationTemplate = (
-        "As {agent_type}, you keep conversation with user to clarify what reasoning can be provided.\n"
-        "Possible knowledge bases are:\n"
-        "{knowledge_bases}\n"
-        "Ask the user to clarify the reasoning needed.\n"
-        "Format the response as follows:\n"
-        "question: <your question>"
-    )
+from ...base import ReasoningState, ReasoningProcess, ReasoningService, ReasoningMethod, Variable
 
 class HuggingFaceOrchestrator(BaseOrchestrator):
     def __init__(self, model_name: str, knowledge_base_retriever: Callable, inference_state_retriever: Callable, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", tokenizer=None, model=None, **kwargs):
         super().__init__(knowledge_base_retriever, inference_state_retriever, inference_session_id, actions, variable_sources)
-        self.tokenizer = tokenizer or AutoTokenizer.from_pretrained(model_name)
-        self.model = model or AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
+        self.pipeline = HuggingFacePipeline(model_name, tokenizer, model, **kwargs)
         self.query_history: List[Dict[str, str]] = []
         self.prompt_templates = prompt_templates
         self.agent_type: str = agent_type
@@ -108,42 +77,68 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
 
         return ''
 
+    def _extract_json_from_response(self, response: str) -> dict:
+        json_match = re.search(r'\{.*\}', response, re.DOTALL)
+        if not json_match:
+            raise ValueError("No JSON object found in the response")
+        
+        json_str = json_match.group().replace('\n', '').replace('}', '}')
+        data = json.loads(json_str)
+        return data
+
     def _fetch_inference_instructions(self, text: str) -> Tuple[str, ReasoningMethod]:
         knowledge_bases_info = "\n".join([f"{kb.id} - {kb.description}" for kb in self.knowledge_bases])
-        prompt = self.prompt_templates.FetchInferenceInstructionsTemplate.format(text=text, knowledge_bases=knowledge_bases_info)
-        response = self._prompt_llm(prompt)
+        prompt = self.prompt_templates.FetchInferenceInstructionsTemplate.format(knowledge_bases=knowledge_bases_info, text=text)
+        self.query_history.append({"role": "engine", "text": prompt})
+        response = self.pipeline.prompt_text_generation(prompt)
+        self.query_history.append({"role": "system", "text": response})
         
-        lines = response.split('\n')
-        knowledge_base_id = None
-        reasoning_method = None
-        for line in lines:
-            if line.startswith("knowledge_base:"):
-                knowledge_base_id = line.split(":")[1].strip()
-            elif line.startswith("reasoning_method:"):
-                method = line.split(":")[1].strip()
-                reasoning_method = ReasoningMethod.HYPOTHESIS_TESTING if method == "hypothesis_testing" else ReasoningMethod.DEDUCTION
+        data = self._extract_json_from_response(response)
+        
+        knowledge_base_id = data.get("knowledge_base_id")
+        reasoning_method_str = data.get("reasoning_method")
+        reasoning_method = ReasoningMethod.HYPOTHESIS_TESTING if reasoning_method_str == "hypothesis_testing" else ReasoningMethod.DEDUCTION
         
         return knowledge_base_id, reasoning_method
 
-    def _fetch_variables(self, text: str, variables: List[Variable]) -> Dict[str, any]:
+    def _fetch_variables(self, text: str, variables: List[Variable]) -> Dict[str, Any]:
         variables_info = "\n".join([f"{var.id} - {var.name}" for var in variables])
-        prompt = self.prompt_templates.FetchVariablesTemplate.format(text=text, variables=variables_info)
-        response = self._prompt_llm(prompt)
+        prompt = self.prompt_templates.FetchVariablesTemplate.format(variables=variables_info, text=text)
+        self.query_history.append({"role": "engine", "text": prompt})
+        response = self.pipeline.prompt_text_generation(prompt)
+        self.query_history.append({"role": "system", "text": response})
         
+        data = self._extract_json_from_response(response)
+        
+        # Extract variables from JSON
         variables_dict = {}
-        lines = response.split('\n')
-        for line in lines:
-            if "=" in line:
-                var_id, var_value = line.split("=")
-                variables_dict[var_id.strip()] = var_value.strip()
+        for var in variables:
+            if var.id in data:
+                variables_dict[var.id] = self._parse_variable_value(data[var.id], var)
         
-        # TODO: Parse the values
         return variables_dict
+
+    def _parse_variable_value(self, value: str, variable: Variable) -> Any:
+        try:
+            if isinstance(variable.value, bool):
+                return value.lower() in ['true', '1', 'yes']
+            elif isinstance(variable.value, int):
+                return int(value)
+            elif isinstance(variable.value, float):
+                return float(value)
+            elif isinstance(variable.value, list):
+                return value.split(',')
+            else:
+                return value
+        except ValueError:
+            return value
 
     def _ask_for_more_information(self, variables: str) -> str:
         context = "\n".join([f"{entry['role']}: {entry['text']}" for entry in self.query_history if entry['role'] in ['user', 'agent']])
         prompt = self.prompt_templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=variables, context=context)
-        response = self._prompt_llm(prompt)
+        self.query_history.append({"role": "engine", "text": prompt})
+        response = self.pipeline.prompt_text_generation(prompt)
+        self.query_history.append({"role": "system", "text": response})
         
         # Parse the response
         lines = response.split('\n')
@@ -157,7 +152,9 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
     def _ask_for_reasoning_clarification(self) -> str:
         knowledge_bases_info = "\n".join([f"{kb.name} - {kb.description}" for kb in self.knowledge_bases])
         prompt = self.prompt_templates.AskForReasoningClarificationTemplate.format(agent_type=self.agent_type, knowledge_bases=knowledge_bases_info)
-        response = self._prompt_llm(prompt)
+        self.query_history.append({"role": "engine", "text": prompt})
+        response = self.pipeline.prompt_text_generation(prompt)
+        self.query_history.append({"role": "system", "text": response})
         
         # Parse the response
         lines = response.split('\n')
@@ -168,17 +165,9 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
         
         return question
 
-    def _prompt_llm(self, prompt: str) -> str:
-        self.query_history.append({"role": "engine", "text": prompt})
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-        outputs = self.model.generate(**inputs)
-        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        self.query_history.append({"role": "system", "text": response})
-        return response
-
     def _set_reasoning_process(self, knowledge_base_id: str, reasoning_method: ReasoningMethod) -> bool:
         if reasoning_method is not None and knowledge_base_id is not None:
-            knowledge_base = next((kb for kb in self.knowledge_bases if kb.name == knowledge_base_id), None)
+            knowledge_base = next((kb for kb in self.knowledge_bases if kb.id == knowledge_base_id), None)
             if knowledge_base:
                 self.reasoning_process = ReasoningProcess(reasoning_method=reasoning_method, knowledge_base=knowledge_base)
                 return True

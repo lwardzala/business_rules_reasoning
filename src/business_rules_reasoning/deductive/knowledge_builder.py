@@ -7,7 +7,7 @@ class KnowledgeBaseBuilder:
         self.knowledge_base = KnowledgeBase()
         self.knowledge_base.rule_set = []
         self.knowledge_base.properties = {}
-        self.knowledge_base.type = ReasoningType.CRISP
+        self.knowledge_base.reasoning_type = ReasoningType.CRISP
 
     def set_id(self, id):
         self.knowledge_base.id = id
@@ -44,7 +44,7 @@ class RuleBuilder:
         self.rule.evaluated = False
 
     def set_conclusion(self, rule_conclusion: Variable):
-        self.rule.conclusion = DeductivePredicate(left_term=Variable(), right_term=rule_conclusion, operator=None)
+        self.rule.conclusion = DeductivePredicate(left_term=Variable(), right_term=rule_conclusion, operator=OperatorType.EQUAL)
         return self
 
     def add_predicate(self, predicate: Predicate):

@@ -45,7 +45,7 @@ class BaseOrchestrator(ABC):
         else:
             self.retrieve_inference_state(self.inference_session_id)
 
-        self.retrieve_knowledge_base()
+        self.retrieve_knowledge_bases()
         self.status = OrchestratorStatus.INITIALIZED
 
         self.update_engine_status()
@@ -70,9 +70,8 @@ class BaseOrchestrator(ABC):
         self.reasoning_process = None
         self.start_orchestration()
 
-    def retrieve_knowledge_base(self) -> List[KnowledgeBase]:
-        knowledge_base_jsons = self.knowledge_base_retriever()
-        self.knowledge_bases = [deserialize_knowledge_base(json.dumps(kb_json)) for kb_json in knowledge_base_jsons]
+    def retrieve_knowledge_bases(self):
+        self.knowledge_bases = self.knowledge_base_retriever()
         return
 
     def retrieve_inference_state(self, inference_id: str) -> ReasoningProcess:

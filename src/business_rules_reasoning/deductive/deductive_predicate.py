@@ -47,7 +47,8 @@ class DeductivePredicate(Predicate):
         return not self.left_term.is_empty() and not self.right_term.is_empty()
 
     def set_variables(self, variable_collection):
-        self.left_term.value = variable_collection[self.left_term.id]
+        if self.left_term.id in variable_collection:
+            self.left_term.value = variable_collection[self.left_term.id]
 
     def get_expected_variable(self):
         return self.right_term

@@ -58,7 +58,7 @@ class DeductiveReasoningService(ReasoningService):
             for predicate in rule.predicates:
                 if isinstance(predicate, DeductivePredicate) and predicate.left_term.is_empty() and all(variable.id != predicate.left_term.id for variable in result):
                     result.append(predicate.left_term)
-        result.sort()
+        result.sort(key=lambda var: var.frequency, reverse=True)
         return result
 
     @staticmethod
