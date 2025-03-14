@@ -43,6 +43,7 @@ class DeductivePredicate(Predicate):
     def is_evaluated(self):
         return self.evaluated
 
+    # TODO: validation vs is ready
     def is_valid(self):
         return not self.left_term.is_empty() and not self.right_term.is_empty()
 

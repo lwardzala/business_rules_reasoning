@@ -57,7 +57,7 @@ class DeductiveReasoningService(ReasoningService):
         for rule in reasoning_process.knowledge_base.rule_set:
             for predicate in rule.predicates:
                 if isinstance(predicate, DeductivePredicate) and predicate.left_term.is_empty() and all(variable.id != predicate.left_term.id for variable in result):
-                    result.append(predicate.left_term)
+                    result.append(predicate.right_term)
         result.sort(key=lambda var: var.frequency, reverse=True)
         return result
 
@@ -94,6 +94,9 @@ class DeductiveReasoningService(ReasoningService):
 
     @staticmethod
     def hypothesis_testing(reasoning_process: ReasoningProcess) -> ReasoningProcess:
+        if not reasoning_process.options or not reasoning_process.options.hypothesis or not isinstance(reasoning_process.options.hypothesis, Variable):
+            raise Exception("[Reasoning Engine]: Hypothesis not provided in reasoning process options.")
+        
         rules = [rule for rule in reasoning_process.knowledge_base.rule_set if rule.conclusion.right_term.id == reasoning_process.options.hypothesis.id and rule.conclusion.right_term.value == reasoning_process.options.hypothesis.value]
         for rule in rules:
             if not rule.evaluated:

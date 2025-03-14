@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from .variable_source import VariableSource
 from .reasoning_action import ReasoningAction
-from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningService, ReasoningType, EvaluationMessage
+from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningService, ReasoningType, EvaluationMessage, Variable
 from ..json_deserializer import deserialize_knowledge_base, deserialize_reasoning_process
 from ..deductive import DeductiveReasoningService
 
@@ -27,6 +27,7 @@ class BaseOrchestrator(ABC):
         self.variable_sources = variable_sources
         self.status = None
         self.reasoning_process: ReasoningProcess = None
+        self.inference_log: List[str] = []
 
     @abstractmethod
     def _next_step(self):
@@ -69,6 +70,7 @@ class BaseOrchestrator(ABC):
         self.inference_session_id = None
         self.reasoning_process = None
         self.start_orchestration()
+        self._log_inference("Reasoning process was removed")
 
     def retrieve_knowledge_bases(self):
         self.knowledge_bases = self.knowledge_base_retriever()
@@ -77,6 +79,7 @@ class BaseOrchestrator(ABC):
     def retrieve_inference_state(self, inference_id: str) -> ReasoningProcess:
         inference_state_json = self.inference_state_retriever(inference_id)
         self.reasoning_process = deserialize_reasoning_process(json.dumps(inference_state_json))
+        self._log_inference(f"Reasoning process was retrieved from a JSON with status: {self.reasoning_process.state}")
         if self.reasoning_process.state == ReasoningState.FINISHED:
             self.reset_orchestration() # TODO: think about: start new orchestration or stay in finished state?
         return
@@ -88,3 +91,27 @@ class BaseOrchestrator(ABC):
             raise NotImplementedError("Fuzzy reasoning is not implemented yet")
         else:
             raise ValueError("Unknown reasoning type")
+        
+    def _start_reasoning_process(self):
+        reasoning_service = self.get_reasoning_service()
+        self._log_inference(f"Starting reasoning process from status: {self.reasoning_process.state}")
+        self.reasoning_process = reasoning_service.start_reasoning(self.reasoning_process)
+        self._log_inference(f"Reasoning process was started. End status: {self.reasoning_process.state}")
+        self.update_engine_status()
+
+    def _get_missing_rerasoning_variables(self) -> List[Variable]:
+        reasoning_service = self.get_reasoning_service()
+        self._log_inference(f"Retrieving missing variables. Status: {self.reasoning_process.state}")
+        return reasoning_service.get_all_missing_variables(self.reasoning_process)
+    
+     # TODO: Update the values from further queries
+    def _set_variables_and_continue_reasoning(self, variables_dict: dict):
+        reasoning_service = self.get_reasoning_service()
+        self._log_inference(f"Setting variables: {', '.join(list(variables_dict.keys()))}. Status: {self.reasoning_process.state}")
+        self.reasoning_process = reasoning_service.set_values(self.reasoning_process, variables_dict)
+        self.reasoning_process = reasoning_service.continue_reasoning(self.reasoning_process)
+        self._log_inference(f"Reasoning continued. End status: {self.reasoning_process.state}")
+        self.update_engine_status()
+
+    def _log_inference(self, text: str):
+        self.inference_log.append(text)
