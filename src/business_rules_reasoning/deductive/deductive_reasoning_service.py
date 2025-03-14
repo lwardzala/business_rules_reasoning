@@ -8,12 +8,15 @@ from .deductive_predicate import DeductivePredicate
 class DeductiveReasoningService(ReasoningService):
     @staticmethod
     def start_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
+        reasoning_process.knowledge_base.validate()
         result = DeductiveReasoningService.clear_reasoning(reasoning_process)
         result.state = ReasoningState.STARTED
         return DeductiveReasoningService.continue_reasoning(result)
 
     @staticmethod
     def continue_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
+        reasoning_process.knowledge_base.validate()
+
         if reasoning_process.reasoning_method == ReasoningMethod.DEDUCTION:
             return DeductiveReasoningService.deduction(reasoning_process)
         elif reasoning_process.reasoning_method == ReasoningMethod.HYPOTHESIS_TESTING:
@@ -81,10 +84,12 @@ class DeductiveReasoningService(ReasoningService):
                 if not rule.evaluated:
                     rule.evaluate()
                 if rule.evaluated and rule.result:
+                    # TODO: Avoid duplicates
                     reasoning_process.reasoned_items.append(rule.conclusion.right_term)
-        except Exception:
+        except Exception as e:
             reasoning_process.evaluation_message = EvaluationMessage.ERROR
             reasoning_process.state = ReasoningState.FINISHED
+            reasoning_process.reasoning_error_message = str(e)
             return reasoning_process
 
         finished = all(rule.evaluated for rule in reasoning_process.knowledge_base.rule_set)

@@ -62,7 +62,7 @@ class BaseOrchestrator(ABC):
             if self.reasoning_process.evaluation_message == EvaluationMessage.ERROR:
                 self.status = OrchestratorStatus.INFERENCE_ERROR
 
-            if self.reasoning_process.state == ReasoningState.FINISHED:
+            if self.reasoning_process.state == ReasoningState.FINISHED and self.reasoning_process.evaluation_message != EvaluationMessage.ERROR:
                 self.status = OrchestratorStatus.INFERENCE_FINISHED
 
     def reset_orchestration(self):

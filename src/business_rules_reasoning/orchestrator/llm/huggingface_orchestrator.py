@@ -27,9 +27,6 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
             else:
                 self.status = OrchestratorStatus.WAITING_FOR_QUERY
         
-        if self.status == OrchestratorStatus.INFERENCE_ERROR:
-            return
-        
         if self.status == OrchestratorStatus.STARTED:
             self._start_reasoning_process()
         
@@ -40,6 +37,9 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
 
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
             # TODO: find and fire the actions accordingly to the conclusions
+            return
+        
+        if self.status == OrchestratorStatus.INFERENCE_ERROR:
             return
 
     def set_session_id(self):
@@ -65,7 +65,7 @@ class HuggingFaceOrchestrator(BaseOrchestrator):
         
         if self.status == OrchestratorStatus.INFERENCE_ERROR:
             # TODO: generate answer
-            return "An error occurred during the reasoning process."
+            return self.reasoning_process.reasoning_error_message
         
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
             # TODO: generate answer

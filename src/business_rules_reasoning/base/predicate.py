@@ -14,11 +14,11 @@ class Predicate(ABC):
         pass
 
     @abstractmethod
-    def is_valid(self):
+    def is_valid(self) -> bool:
         pass
 
     @abstractmethod
-    def is_evaluated(self):
+    def is_evaluated(self) -> bool:
         pass
 
     @abstractmethod
@@ -35,4 +35,8 @@ class Predicate(ABC):
 
     @abstractmethod
     def get_expected_variable(self):
+        pass
+
+    @abstractmethod
+    def validate(self):
         pass

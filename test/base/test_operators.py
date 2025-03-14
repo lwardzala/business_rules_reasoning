@@ -1,6 +1,6 @@
 import unittest
 from src.business_rules_reasoning.base.value_types import BaseType, ListType
-from src.business_rules_reasoning.base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset
+from src.business_rules_reasoning.base.operators import Between, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, NotBetween, NotSubset, Subset, Equal, NotEqual, IsIn, NotIn
 
 class TestOperators(unittest.TestCase):
     def test_between(self):
@@ -70,6 +70,26 @@ class TestOperators(unittest.TestCase):
         self.assertTrue(operator.compare(left_term, right_term))
         left_term = BaseType(5)
         self.assertFalse(operator.compare(left_term, right_term))
+
+    def test_equal_operator(self):
+        operator = Equal()
+        self.assertTrue(operator.compare(BaseType(5), BaseType(5)))
+        self.assertFalse(operator.compare(BaseType(5), BaseType(10)))
+
+    def test_not_equal_operator(self):
+        operator = NotEqual()
+        self.assertTrue(operator.compare(BaseType(5), BaseType(10)))
+        self.assertFalse(operator.compare(BaseType(5), BaseType(5)))
+
+    def test_is_in_operator(self):
+        operator = IsIn()
+        self.assertTrue(operator.compare(BaseType(5), ListType([1, 2, 3, 5])))
+        self.assertFalse(operator.compare(ListType([5]), ListType([1, 2, 3, 6])))
+
+    def test_not_in_operator(self):
+        operator = NotIn()
+        self.assertTrue(operator.compare(BaseType(5), ListType([1, 2, 3, 6])))
+        self.assertFalse(operator.compare(BaseType(5), ListType([1, 2, 3, 5])))
 
 if __name__ == '__main__':
     unittest.main()

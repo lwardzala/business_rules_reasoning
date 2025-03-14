@@ -9,3 +9,7 @@ class KnowledgeBase:
         self.rule_set = rule_set if rule_set is not None else []
         self.properties = properties if properties is not None else {}
         self.reasoning_type = reasoning_type
+
+    def validate(self):
+        for rule in self.rule_set:
+            rule.validate()

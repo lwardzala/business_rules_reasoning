@@ -6,3 +6,7 @@ from .less_than import LessThan
 from .not_between import NotBetween
 from .not_subset import NotSubset
 from .subset import Subset
+from .equal import Equal
+from .not_equal import NotEqual
+from .is_in import IsIn
+from .not_in import NotIn

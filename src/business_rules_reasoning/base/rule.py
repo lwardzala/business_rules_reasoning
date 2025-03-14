@@ -27,7 +27,11 @@ class Rule:
             self.evaluated = True
 
     def is_valid(self):
-        return all(predicate.get_missing_variables() is None for predicate in self.predicates)
+        return all(predicate.get_missing_variables() is None and predicate.is_valid() for predicate in self.predicates)
+    
+    def validate(self):
+        for predicate in self.predicates:
+            predicate.validate()
 
     def reset_evaluation(self):
         self.evaluated = False
