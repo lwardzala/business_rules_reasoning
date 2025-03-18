@@ -40,3 +40,7 @@ class Predicate(ABC):
     @abstractmethod
     def validate(self):
         pass
+
+    @abstractmethod
+    def display(self) -> str:
+        pass

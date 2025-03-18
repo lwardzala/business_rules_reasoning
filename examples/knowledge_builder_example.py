@@ -1,4 +1,4 @@
-from business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
+from src.business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
 from src.business_rules_reasoning import OperatorType
 
 # Create variables

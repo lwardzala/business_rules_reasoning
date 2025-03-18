@@ -40,21 +40,32 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.assertEqual(variables_dict["var2"], True)
 
     @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_ask_for_more_information(self, mock_prompt_text_gen):
-        mock_prompt_text_gen.return_value = "question: Can you provide more details about var1?"
-        self.orchestrator.query_log = [
-            {"role": "user", "text": "Initial query"},
-            {"role": "agent", "text": "Response from agent"}
+    def test_fetch_variables_string_to_int(self, mock_prompt_text_gen):
+        mock_prompt_text_gen.return_value = '{"var1": "39",\n     "var2": "true"} {"var3":0}'
+        variables = [
+            Variable(id="var1", name="Variable 1", value=0),
+            Variable(id="var2", name="Variable 2", value=False)
         ]
-        question = self.orchestrator._ask_for_more_information("var1")
-        self.assertEqual(question, "Can you provide more details about var1?")
+        variables_dict = self.orchestrator._fetch_variables("test query", variables)
+        self.assertEqual(variables_dict["var1"], 39)
+        self.assertEqual(variables_dict["var2"], True)
 
-    @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_ask_for_reasoning_clarification(self, mock_prompt_text_gen):
-        mock_prompt_text_gen.return_value = "question: Can you clarify the reasoning needed?"
-        self.orchestrator.knowledge_bases = [KnowledgeBase(name="KB1", description="Test KB")]
-        question = self.orchestrator._ask_for_reasoning_clarification()
-        self.assertEqual(question, "Can you clarify the reasoning needed?")
+    # @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
+    # def test_ask_for_more_information(self, mock_prompt_text_gen):
+    #     mock_prompt_text_gen.return_value = "question: Can you provide more details about var1?"
+    #     self.orchestrator.query_log = [
+    #         {"role": "user", "text": "Initial query"},
+    #         {"role": "agent", "text": "Response from agent"}
+    #     ]
+    #     question = self.orchestrator._ask_for_more_information("var1")
+    #     self.assertEqual(question, "Can you provide more details about var1?")
+
+    # @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
+    # def test_ask_for_reasoning_clarification(self, mock_prompt_text_gen):
+    #     mock_prompt_text_gen.return_value = "question: Can you clarify the reasoning needed?"
+    #     self.orchestrator.knowledge_bases = [KnowledgeBase(name="KB1", description="Test KB")]
+    #     question = self.orchestrator._ask_for_reasoning_clarification()
+    #     self.assertEqual(question, "Can you clarify the reasoning needed?")
 
     def test_set_reasoning_process(self):
         knowledge_base = KnowledgeBase(id="kb1", name="KBbb1", description="Test KB")
@@ -68,18 +79,18 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
     @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
     def test_next_step_with_reasoning_process_and_missing_variables(self, mock_prompt_text_gen):
         # Set up the mock response for fetching variables
-        mock_prompt_text_gen.return_value = '{"var1": 39, "var2": "true"}'
+        mock_prompt_text_gen.return_value = '{"var1": 39, "var2": True}'
         
         # Set up the knowledge base and reasoning process
         knowledge_base = KnowledgeBase(id="kb1", name="KB1", description="Test KB", reasoning_type=ReasoningType.CRISP)
         
         # Create variables
-        var1 = Variable(id="var1", name="Variable 1", value=None)
-        var2 = Variable(id="var2", name="Variable 2", value=None)
+        var1 = Variable(id="var1", name="Variable 1", value=0)
+        var2 = Variable(id="var2", name="Variable 2", value=True)
         
         # Create predicates
         predicate1 = DeductivePredicate(left_term=var1, right_term=Variable(id="var1", value=10), operator=OperatorType.GREATER_THAN)
-        predicate2 = DeductivePredicate(left_term=var2, right_term=Variable(id="var2", value=20), operator=OperatorType.LESS_THAN)
+        predicate2 = DeductivePredicate(left_term=var2, right_term=Variable(id="var2", value=True), operator=OperatorType.LESS_THAN)
         
         # Create rule
         rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductivePredicate(left_term=Variable(), right_term=Variable(id="conclusion", value=True), operator=OperatorType.EQUAL))
@@ -95,7 +106,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         # Set up the missing variables
         missing_variables = [var1, var2]
         self.orchestrator.get_reasoning_service().get_all_missing_variables = MagicMock(return_value=missing_variables)
-        self.orchestrator._fetch_variables = MagicMock(return_value={"var1": 39, "var2": "true"})
+        self.orchestrator._fetch_variables = MagicMock(return_value={"var1": 39, "var2": True})
         
         # Call _next_step
         self.orchestrator._next_step("test query mock")

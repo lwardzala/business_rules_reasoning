@@ -58,3 +58,6 @@ class ListType:
 
     def get_value(self):
         return self.values
+    
+    def get_type(self):
+        return "list"

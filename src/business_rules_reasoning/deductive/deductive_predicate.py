@@ -14,6 +14,9 @@ class DeductivePredicate(Predicate):
     def evaluate(self):
         if not self.is_ready():
             raise Exception(f"[Inference Engine]: Evaluation of predicate has failed. Missing value {self.left_term.id}.")
+        if self.left_term.get_value_type() != self.right_term.get_value_type():
+            raise Exception(f"[Inference Engine]: Variable {self.right_term.id}: Type mismatch between left term value ({self.left_term.get_value_type()}) and right term value ({self.right_term.get_value_type()}).")
+        
         if self.evaluated:
             return
 
@@ -21,7 +24,7 @@ class DeductivePredicate(Predicate):
             operator_class = {
                 OperatorType.BETWEEN: Between,
                 OperatorType.EQUAL: Equal,
-                OperatorType.NOT_EQUAL: GreaterOrEqual,
+                OperatorType.NOT_EQUAL: NotEqual,
                 OperatorType.GREATER_OR_EQUAL: GreaterOrEqual,
                 OperatorType.GREATER_THAN: GreaterThan,
                 OperatorType.LESS_OR_EQUAL: LessOrEqual,
@@ -70,3 +73,27 @@ class DeductivePredicate(Predicate):
     def reset_evaluation(self):
         self.result = False
         self.evaluated = False
+
+    def display_operator(self) -> str:
+        return {
+            OperatorType.BETWEEN: "BETWEEN",
+            OperatorType.EQUAL: "=",
+            OperatorType.NOT_EQUAL: "!=",
+            OperatorType.GREATER_OR_EQUAL: ">=",
+            OperatorType.GREATER_THAN: ">",
+            OperatorType.LESS_OR_EQUAL: "<=",
+            OperatorType.LESS_THAN: "<",
+            OperatorType.NOT_BETWEEN: "NOT BETWEEN",
+            OperatorType.NOT_SUBSET: "NOT SUBSET",
+            OperatorType.SUBSET: "SUBSET",
+            OperatorType.IS_IN: "IN",
+            OperatorType.NOT_IN: "NOT IN"
+        }[self.operator]
+
+    def display(self) -> str:
+        return f"{self.left_term.id} {self.display_operator()} {self.right_term.value}"
+
+    def display_state(self) -> str:
+        predicate_status = "Evaluated" if self.evaluated else "Not Evaluated"
+        predicate_result = "True" if self.result else "False"
+        return f"{self.left_term.id} {self.display_operator()} {self.right_term.value} (Provided: {self.left_term.value}, Status: {predicate_status}, Result: {predicate_result})"

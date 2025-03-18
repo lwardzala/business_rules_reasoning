@@ -44,7 +44,7 @@ class RuleBuilder:
         self.rule.evaluated = False
 
     def set_conclusion(self, rule_conclusion: Variable):
-        self.rule.conclusion = DeductivePredicate(left_term=Variable(), right_term=rule_conclusion, operator=OperatorType.EQUAL)
+        self.rule.conclusion = DeductivePredicate(left_term=rule_conclusion, right_term=rule_conclusion, operator=OperatorType.EQUAL)
         return self
 
     def add_predicate(self, predicate: Predicate):
@@ -74,6 +74,15 @@ class PredicateBuilder:
         self.predicate.left_term.name = variable_name
         self.predicate.right_term.id = variable_id
         self.predicate.right_term.name = variable_name
+        self.predicate.operator = operator_type
+        self.predicate.right_term.value = right_term_value
+        return self
+    
+    def configure_predicate_with_variable(self, variable: Variable, operator_type: OperatorType, right_term_value):
+        self.predicate.left_term.id = variable.id
+        self.predicate.left_term.name = variable.name
+        self.predicate.right_term.id = variable.id
+        self.predicate.right_term.name = variable.name
         self.predicate.operator = operator_type
         self.predicate.right_term.value = right_term_value
         return self

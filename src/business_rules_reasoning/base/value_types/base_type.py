@@ -43,6 +43,15 @@ class BaseType:
             return left_term.value in self.value
 
         return False
+    
+    def get_type(self):
+        if self.is_boolean():
+            return "boolean"
+        if self.is_number():
+            return "number"
+        if self.is_string():
+            return "string"
+        return "unknown"
 
     def is_number(self):
         return isinstance(self.value, (int, float))

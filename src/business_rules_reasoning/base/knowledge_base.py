@@ -13,3 +13,6 @@ class KnowledgeBase:
     def validate(self):
         for rule in self.rule_set:
             rule.validate()
+
+    def display(self):
+        return "\n".join([rule.display() for rule in self.rule_set])

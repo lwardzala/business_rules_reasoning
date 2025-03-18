@@ -84,8 +84,8 @@ class DeductiveReasoningService(ReasoningService):
                 if not rule.evaluated:
                     rule.evaluate()
                 if rule.evaluated and rule.result:
-                    # TODO: Avoid duplicates
-                    reasoning_process.reasoned_items.append(rule.conclusion.right_term)
+                    if rule.conclusion.right_term not in reasoning_process.reasoned_items:
+                        reasoning_process.reasoned_items.append(rule.conclusion.right_term)
         except Exception as e:
             reasoning_process.evaluation_message = EvaluationMessage.ERROR
             reasoning_process.state = ReasoningState.FINISHED
@@ -94,7 +94,10 @@ class DeductiveReasoningService(ReasoningService):
 
         finished = all(rule.evaluated for rule in reasoning_process.knowledge_base.rule_set)
         reasoning_process.state = ReasoningState.FINISHED if finished else ReasoningState.STOPPED
-        reasoning_process.evaluation_message = EvaluationMessage.PASSED if reasoning_process.reasoned_items else (EvaluationMessage.FAILED if finished else EvaluationMessage.MISSING_VALUES)
+        if finished:
+            reasoning_process.evaluation_message = EvaluationMessage.PASSED if reasoning_process.reasoned_items else EvaluationMessage.FAILED
+        else:
+            reasoning_process.evaluation_message = EvaluationMessage.MISSING_VALUES
         return reasoning_process
 
     @staticmethod

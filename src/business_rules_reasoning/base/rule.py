@@ -3,8 +3,8 @@ from .predicate import Predicate
 
 class Rule:
     def __init__(self, conclusion: Predicate = None, predicates: List[Predicate] = None):
-        self.conclusion = conclusion
-        self.predicates = predicates if predicates is not None else []
+        self.conclusion: Predicate = conclusion
+        self.predicates: List[Predicate] = predicates if predicates is not None else []
         self.result = False
         self.evaluated = False
 
@@ -42,3 +42,15 @@ class Rule:
     def set_variables(self, variables):
         for predicate in self.predicates:
             predicate.set_variables(variables)
+
+    def display(self):
+        predicates_str = " ∧ ".join([predicate.display() for predicate in self.predicates])
+        conclusion_str = self.conclusion.display()
+        return f"({predicates_str}) → {conclusion_str}"
+
+    def display_state(self) -> str:
+        predicates_str = " ∧ ".join([predicate.display_state() for predicate in self.predicates])
+        conclusion_str = self.conclusion.display()
+        rule_status = "Evaluated" if self.evaluated else "Not Evaluated"
+        rule_result = "True" if self.result else "False"
+        return f"({predicates_str}) → {conclusion_str}\nRule Status: {rule_status}, Rule Result: {rule_result}"

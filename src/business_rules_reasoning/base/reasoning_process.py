@@ -12,3 +12,13 @@ class ReasoningProcess:
         self.evaluation_message = EvaluationMessage.NONE
         self.options = options
         self.reasoning_error_message = None
+
+    def display_state(self) -> str:
+        rules_display = "\n\n".join([rule.display_state() for rule in self.knowledge_base.rule_set])
+        state_display = f"State: {self.state.name}"
+        evaluation_message_display = f"Evaluation Message: {self.evaluation_message.name}"
+        reasoned_items_display = "Reasoned Items: " + ", ".join([f"{item.id} = {item.value}" for item in self.reasoned_items])
+        error_message_display = f"Error Message: {self.reasoning_error_message}" if self.state == ReasoningState.FINISHED and self.evaluation_message == EvaluationMessage.ERROR else ""
+        reasoning_method_display = f"Reasoning Method: {self.reasoning_method.name}"
+        knowledge_base_type_display = f"Knowledge Base Type: {self.knowledge_base.reasoning_type.name}"
+        return f"{rules_display}\n\n{state_display}\n{evaluation_message_display}\n{reasoned_items_display}\n{error_message_display}\n{reasoning_method_display}\n{knowledge_base_type_display}"

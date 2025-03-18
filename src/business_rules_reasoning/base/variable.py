@@ -25,6 +25,9 @@ class Variable:
                 raise Exception(f"Unknown variable type at {self.id}")
         except Exception as ex:
             raise Exception(f"Couldn't cast value of {self.name}. Unknown value type") from ex
+        
+    def get_value_type(self):
+        return self.get_value().get_type()
 
     def is_empty(self):
         return self.value is None

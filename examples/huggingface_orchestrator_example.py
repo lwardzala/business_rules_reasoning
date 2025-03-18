@@ -46,6 +46,12 @@ def main():
     model_name = "meta-llama/Llama-3.2-3B-Instruct"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name)
+
+    kwargs={
+        "max_new_tokens": 100,
+        "temperature": 0.6,
+        "repetition_penalty": 1
+    }
     
     orchestrator = HuggingFaceOrchestrator(
         model_name=model_name,
@@ -53,16 +59,16 @@ def main():
         inference_state_retriever=inference_state_retriever,
         tokenizer=tokenizer,
         model=model,
-        kwargs={"max_new_tokens": 200}
+        **kwargs
     )
-    
+
     # Provide a query with necessary data
     query_text = "The patient has a fever of 39 and headache. Should we prescribe paracetamol?"
     response = orchestrator.query(query_text)
-    
+
     # Print the response
     print("Response:", response)
-    
+
     # Check the status and reasoning process
     if orchestrator.status == OrchestratorStatus.INFERENCE_FINISHED:
         print("Inference finished. Reasoning process:", orchestrator.reasoning_process)
