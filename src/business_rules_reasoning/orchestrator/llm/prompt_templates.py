@@ -28,7 +28,7 @@ class PromptTemplates:
     FetchVariablesTemplate = (
         "You are an expert of facts retrieval. You can only answer about facts from the provided query.\n"
         "If a fact cannot be found, do not provide the value.\n"
-        "From the required facts, retrieve its values from the query.\n"
+        "From the required facts, retrieve its values only from the query. If there is no facts, return null value\n"
         "Provide the facts after word 'Answer:'. Use JSON format in curly brackets providing the facts as a dictionary where fact ID is the key.\n"
         "The required facts you need to retrieve are listed in format:\n <fact_id> - <fact_description>\n"
         "Required facts are:\n"
@@ -67,6 +67,6 @@ class PromptTemplates:
         "{conclusions}\n\n"
         "Given context:\n"
         "{context}\n\n"
-        "Give an answer to the user. Do not provide any additional information.\n\n"
+        "Give an answer to the user for all the conclusions. Do not provide any additional information.\n\n"
         "Answer:\n"
     )

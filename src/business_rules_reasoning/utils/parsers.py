@@ -5,6 +5,10 @@ from ..base import Variable
 
 def parse_variable_value(value: str, variable: Variable) -> Any:
     try:
+        # Return None if the value is null or the string "null"
+        if value is None or (isinstance(value, str) and value.strip().lower() == "null"):
+            return None
+
         if variable.get_value_type() == 'boolean':
             if isinstance(value, str):
                 return value.lower() in ['true', '1', 'yes']

@@ -131,7 +131,9 @@ class LLMOrchestrator(BaseOrchestrator):
         variables_dict = {}
         for var in variables:
             if var.id in data:
-                variables_dict[var.id] = parse_variable_value(data[var.id], var)
+                parsed_value = parse_variable_value(data[var.id], var)
+                if parsed_value is not None:  # Skip variables with None value
+                    variables_dict[var.id] = parsed_value
 
         self._log_inference(f"[Orchestrator]: Parsed variables from prompt: {json.dumps(variables_dict)}")
         
@@ -184,20 +186,16 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _fetch_hypothesis_conclusion(self, text: str, knowledge_base_id: str) -> Variable:
         knowledge_base_rules = next((kb.rule_set for kb in self.knowledge_bases if kb.id == knowledge_base_id), None)
-        # Prepare the list of conclusions from the rules
         conclusions_info = "\n".join([f"{rule.conclusion.right_term.id} - {rule.conclusion.right_term.name}" for rule in knowledge_base_rules])
         conclusions = [rule.conclusion.right_term for rule in knowledge_base_rules]
 
-        # Prepare the prompt
         prompt = self.prompt_templates.FetchHypothesisTestingTemplate.format(conclusions=conclusions_info, text=text)
         self._log_inference(f"[Orchestrator]: Prompting for hypothesis conclusion...")
         self._log_query(prompt, "engine")
 
-        # Generate the response
         response = self.llm.prompt_text_generation(prompt)
         self._log_query(response, "system")
 
-        # Parse the JSON response to fetch the hypothesis_id
         data = extract_json_from_response(response)
         self._log_inference(f"[Orchestrator]: Retrieved JSON from prompt: {json.dumps(data)}")
 
