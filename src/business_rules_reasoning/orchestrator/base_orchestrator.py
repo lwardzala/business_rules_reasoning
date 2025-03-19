@@ -17,8 +17,16 @@ class OrchestratorStatus(Enum):
     INFERENCE_FINISHED = 'INFERENCE_FINISHED'
     INFERENCE_ERROR = 'INFERENCE_ERROR'
 
+class VariablesFetchingMode(Enum):
+    STEP_BY_STEP = 'STEP_BY_STEP'
+    ALL_POSSIBLE = 'ALL_POSSIBLE'
+
+class OrchestratorOptions:
+    def __init__(self, variables_fetching: VariablesFetchingMode = VariablesFetchingMode.ALL_POSSIBLE):
+        self.variables_fetching = variables_fetching
+
 class BaseOrchestrator(ABC):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None):
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, options: OrchestratorOptions, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None):
         self.knowledge_base_retriever = knowledge_base_retriever
         self.inference_state_retriever = inference_state_retriever
         self.knowledge_bases: List[KnowledgeBase] = []
@@ -28,6 +36,7 @@ class BaseOrchestrator(ABC):
         self.status = None
         self.reasoning_process: ReasoningProcess = None
         self.inference_log: List[str] = []
+        self.options = options
 
     @abstractmethod
     def _next_step(self):
@@ -56,24 +65,16 @@ class BaseOrchestrator(ABC):
 
     def update_engine_status(self):
         if self.reasoning_process is not None:
-            new_status = OrchestratorStatus.WAITING_FOR_QUERY
-            self._log_inference(f"[Orchestrator]: Changing status from {self.status} to {new_status}")
-            self.status = new_status
+            # self._set_orchestrator_status(OrchestratorStatus.WAITING_FOR_QUERY)
 
             if self.reasoning_process.evaluation_message == EvaluationMessage.MISSING_VALUES:
-                new_status = OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES
-                self._log_inference(f"[Orchestrator]: Changing status from {self.status} to {new_status}")
-                self.status = new_status
+                self._set_orchestrator_status(OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES)
 
             if self.reasoning_process.evaluation_message == EvaluationMessage.ERROR:
-                new_status = OrchestratorStatus.INFERENCE_ERROR
-                self._log_inference(f"[Orchestrator]: Changes status from {self.status} to {new_status}")
-                self.status = new_status
+                self._set_orchestrator_status(OrchestratorStatus.INFERENCE_ERROR)
 
             if self.reasoning_process.state == ReasoningState.FINISHED and self.reasoning_process.evaluation_message != EvaluationMessage.ERROR:
-                new_status = OrchestratorStatus.INFERENCE_FINISHED
-                self._log_inference(f"[Orchestrator]: Changes status from {self.status} to {new_status}")
-                self.status = new_status
+                self._set_orchestrator_status(OrchestratorStatus.INFERENCE_FINISHED)
 
     def reset_orchestration(self):
         self.status = None
@@ -126,3 +127,7 @@ class BaseOrchestrator(ABC):
 
     def _log_inference(self, text: str):
         self.inference_log.append(text)
+
+    def _set_orchestrator_status(self, status: OrchestratorStatus):
+        self._log_inference(f"[Orchestrator]: Changing status from {self.status} to {status}")
+        self.status = status

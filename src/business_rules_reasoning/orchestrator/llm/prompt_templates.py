@@ -2,7 +2,6 @@
 class PromptTemplates:
     FetchInferenceInstructionsTemplate = (
         "You are an expert of facts retrieval. You can only answer about facts from the provided query.\n"
-        # "If the facts cannot be found, point that there is need to provide more information.\n"
         "If a fact cannot be found, do not provide the value.\n"
         "You must choose the appropriate knowledge base from the provided ones based on the query.\n"
         "If you choose the knowledge base you must provide the knowledge base ID in JSON format in curly brackets where the knowledge base ID key is 'knowledge_base_id'. You answer after word 'Answer:'.\n\n"
@@ -14,10 +13,20 @@ class PromptTemplates:
         "Which knowledge base should be used? You are allowed to answer only with knowledge base ID.\n\n"
         "Answer:\n"
     )
-    # TODO: Explain the value formats
+    FetchHypothesisTestingTemplate = (
+        "You are an expert of facts retrieval. You can only answer about facts from the provided query.\n"
+        "If a fact cannot be found, do not provide the value.\n"
+        "You are asked to provide the ID of the hypothesis for hypothesis testing.\n"
+        "Provide the hypothesis ID in JSON format with key 'hypothesis_id' after word 'Answer:'.\n"
+        "The hypothesis you need to choose one from are listed in format:\n <hypothesis_id> - <hypothesis_description>\n"
+        "Possible hypothesis are:\n"
+        "{conclusions}\n\n"
+        "Given query: '{text}'\n\n"
+        "Which hypothesis should be tested? You are allowed to answer only with hypothesis ID based on the question that the user asked.\n\n"
+        "Answer:\n"
+    )
     FetchVariablesTemplate = (
         "You are an expert of facts retrieval. You can only answer about facts from the provided query.\n"
-        # "If the facts cannot be found, skip them and provide only those from the query.\n"
         "If a fact cannot be found, do not provide the value.\n"
         "From the required facts, retrieve its values from the query.\n"
         "Provide the facts after word 'Answer:'. Use JSON format in curly brackets providing the facts as a dictionary where fact ID is the key.\n"

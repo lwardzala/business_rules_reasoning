@@ -3,7 +3,7 @@ from typing import List, Callable
 from business_rules_reasoning import OperatorType
 from business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
 from business_rules_reasoning.orchestrator import OrchestratorStatus
-from business_rules_reasoning.orchestrator.llm.huggingface_orchestrator import HuggingFaceOrchestrator
+from business_rules_reasoning.orchestrator.llm import LLMOrchestrator
 
 def knowledge_base_retriever() -> List[dict]:
     # Build the knowledge base with rules
@@ -53,7 +53,7 @@ def main():
         "repetition_penalty": 1
     }
     
-    orchestrator = HuggingFaceOrchestrator(
+    orchestrator = LLMOrchestrator(
         model_name=model_name,
         knowledge_base_retriever=knowledge_base_retriever,
         inference_state_retriever=inference_state_retriever,

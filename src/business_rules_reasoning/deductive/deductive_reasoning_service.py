@@ -102,17 +102,27 @@ class DeductiveReasoningService(ReasoningService):
 
     @staticmethod
     def hypothesis_testing(reasoning_process: ReasoningProcess) -> ReasoningProcess:
-        if not reasoning_process.options or not reasoning_process.options.hypothesis or not isinstance(reasoning_process.options.hypothesis, Variable):
+        if not reasoning_process.options or "hypothesis" not in reasoning_process.options or not isinstance(reasoning_process.options["hypothesis"], Variable):
             raise Exception("[Reasoning Engine]: Hypothesis not provided in reasoning process options.")
         
-        rules = [rule for rule in reasoning_process.knowledge_base.rule_set if rule.conclusion.right_term.id == reasoning_process.options.hypothesis.id and rule.conclusion.right_term.value == reasoning_process.options.hypothesis.value]
-        for rule in rules:
-            if not rule.evaluated:
-                rule.evaluate()
-            if rule.evaluated and rule.result and rule.conclusion.right_term.id == reasoning_process.options.hypothesis.id and rule.conclusion.right_term.value == reasoning_process.options.hypothesis.value:
-                reasoning_process.reasoned_items = [reasoning_process.options.hypothesis]
+        hypothesis = reasoning_process.options["hypothesis"]
+        rules = [rule for rule in reasoning_process.knowledge_base.rule_set if rule.conclusion.right_term.id == hypothesis.id and rule.conclusion.right_term.value == hypothesis.value]
+        try:
+            for rule in rules:
+                if not rule.evaluated:
+                    rule.evaluate()
+                if rule.evaluated and rule.result and rule.conclusion.right_term.id == hypothesis.id and rule.conclusion.right_term.value == hypothesis.value:
+                    reasoning_process.reasoned_items = [hypothesis]
+        except Exception as e:
+            reasoning_process.evaluation_message = EvaluationMessage.ERROR
+            reasoning_process.state = ReasoningState.FINISHED
+            reasoning_process.reasoning_error_message = str(e)
+            return reasoning_process
 
-        finished = all(rule.evaluated for rule in rules)
+        finished = (all(rule.evaluated for rule in rules) or any(rule.evaluated and rule.result for rule in rules))
         reasoning_process.state = ReasoningState.FINISHED if finished else ReasoningState.STOPPED
-        reasoning_process.evaluation_message = EvaluationMessage.PASSED if reasoning_process.reasoned_items else (EvaluationMessage.FAILED if finished else EvaluationMessage.MISSING_VALUES)
+        if finished:
+            reasoning_process.evaluation_message = EvaluationMessage.PASSED if reasoning_process.reasoned_items else EvaluationMessage.FAILED
+        else:
+            reasoning_process.evaluation_message = EvaluationMessage.MISSING_VALUES
         return reasoning_process

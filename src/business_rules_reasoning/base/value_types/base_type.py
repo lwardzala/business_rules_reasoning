@@ -7,7 +7,7 @@ class BaseType:
             if self.is_number_or_boolean() and other.is_number_or_boolean():
                 return float(self.value) == float(other.value)
             if self.is_string() and other.is_string():
-                return str(self.value) == str(other.value)
+                return str(self.value).lower() == str(other.value).lower()
         return False
 
     def __ne__(self, other):
@@ -40,7 +40,7 @@ class BaseType:
         if left_term.is_number_or_boolean():
             return self.__eq__(left_term)
         elif isinstance(self.value, str):
-            return left_term.value in self.value
+            return str(left_term.value).lower() in str(self.value).lower()
 
         return False
     

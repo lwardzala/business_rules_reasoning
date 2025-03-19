@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.business_rules_reasoning.orchestrator.base_orchestrator import BaseOrchestrator, OrchestratorStatus
+from src.business_rules_reasoning.orchestrator.base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions, VariablesFetchingMode
 from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, ReasoningMethod, Variable, Rule, ReasoningType, ReasoningState, EvaluationMessage
 from src.business_rules_reasoning.deductive import DeductivePredicate
 from src.business_rules_reasoning.base.operator_enums import OperatorType
@@ -18,7 +18,8 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         self.inference_state_retriever = MagicMock()
         self.orchestrator = TestBaseOrchestrator(
             knowledge_base_retriever=self.knowledge_base_retriever,
-            inference_state_retriever=self.inference_state_retriever
+            inference_state_retriever=self.inference_state_retriever,
+            options=OrchestratorOptions()
         )
 
     def test_start_orchestration(self):
@@ -63,6 +64,24 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         variables_dict = {"var1": 15, "var2": 5}
         self.orchestrator._set_variables_and_continue_reasoning(variables_dict)
         self.assertEqual(self.orchestrator.reasoning_process.state, ReasoningState.FINISHED)
+
+class TestBaseOrchestratorOptions(unittest.TestCase):
+    def test_default_options(self):
+        options = OrchestratorOptions()
+        self.assertEqual(options.variables_fetching, VariablesFetchingMode.ALL_POSSIBLE)
+
+    def test_custom_options(self):
+        options = OrchestratorOptions(variables_fetching=VariablesFetchingMode.STEP_BY_STEP)
+        self.assertEqual(options.variables_fetching, VariablesFetchingMode.STEP_BY_STEP)
+
+    def test_orchestrator_with_options(self):
+        options = OrchestratorOptions(variables_fetching=VariablesFetchingMode.STEP_BY_STEP)
+        orchestrator = TestBaseOrchestrator(
+            knowledge_base_retriever=MagicMock(),
+            inference_state_retriever=MagicMock(),
+            options=options
+        )
+        self.assertEqual(orchestrator.options.variables_fetching, VariablesFetchingMode.STEP_BY_STEP)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from src.business_rules_reasoning.orchestrator.llm.huggingface_orchestrator import HuggingFaceOrchestrator, PromptTemplates, OrchestratorStatus
+from src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline import HuggingFacePipeline
+from src.business_rules_reasoning.orchestrator.llm.llm_orchestrator import LLMOrchestrator, PromptTemplates, OrchestratorStatus
 from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, ReasoningMethod, Variable, Rule, ReasoningType, ReasoningState, EvaluationMessage
 from src.business_rules_reasoning.deductive import DeductivePredicate
 from src.business_rules_reasoning.base.operator_enums import OperatorType
@@ -12,25 +13,22 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.mock_model = MagicMock(spec=AutoModelForCausalLM)
         self.knowledge_base_retriever = MagicMock()
         self.inference_state_retriever = MagicMock()
-        self.orchestrator = HuggingFaceOrchestrator(
-            model_name="mock-model",
+        self.llm = MagicMock(spec=HuggingFacePipeline)
+        self.orchestrator = LLMOrchestrator(
             knowledge_base_retriever=self.knowledge_base_retriever,
             inference_state_retriever=self.inference_state_retriever,
-            tokenizer=self.mock_tokenizer,
-            model=self.mock_model
+            llm=self.llm
         )
 
-    @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_fetch_inference_instructions(self, mock_prompt_text_gen):
-        mock_prompt_text_gen.return_value = ' { "knowledge_base_id": "kb1", "reasoning_method": "deduction" }\nreasoning_method: deduction'
+    def test_fetch_inference_instructions(self):
+        self.orchestrator.llm.prompt_text_generation.return_value = ' { "knowledge_base_id": "kb1", "reasoning_method": "deduction" }\nreasoning_method: deduction'
         self.orchestrator.knowledge_bases = [KnowledgeBase(id="kb1", name="KB1", description="Test KB")]
         knowledge_base_id, reasoning_method = self.orchestrator._fetch_inference_instructions("test query")
         self.assertEqual(knowledge_base_id, "kb1")
         self.assertEqual(reasoning_method, ReasoningMethod.DEDUCTION)
 
-    @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_fetch_variables(self, mock_prompt_text_gen):
-        mock_prompt_text_gen.return_value = '{"var1": 39,\n     "var2": "true"} {"var3":0}'
+    def test_fetch_variables(self):
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"var1": 39,\n     "var2": "true"} {"var3":0}'
         variables = [
             Variable(id="var1", name="Variable 1", value=0),
             Variable(id="var2", name="Variable 2", value=False)
@@ -39,9 +37,8 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.assertEqual(variables_dict["var1"], 39)
         self.assertEqual(variables_dict["var2"], True)
 
-    @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_fetch_variables_string_to_int(self, mock_prompt_text_gen):
-        mock_prompt_text_gen.return_value = '{"var1": "39",\n     "var2": "true"} {"var3":0}'
+    def test_fetch_variables_string_to_int(self):
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"var1": "39",\n     "var2": "true"} {"var3":0}'
         variables = [
             Variable(id="var1", name="Variable 1", value=0),
             Variable(id="var2", name="Variable 2", value=False)
@@ -70,16 +67,15 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
     def test_set_reasoning_process(self):
         knowledge_base = KnowledgeBase(id="kb1", name="KBbb1", description="Test KB")
         self.orchestrator.knowledge_bases = [knowledge_base]
-        result = self.orchestrator._set_reasoning_process("kb1", ReasoningMethod.DEDUCTION)
+        result = self.orchestrator._set_reasoning_process("kb1", ReasoningMethod.DEDUCTION, {})
         self.assertTrue(result)
         self.assertIsNotNone(self.orchestrator.reasoning_process)
         self.assertEqual(self.orchestrator.reasoning_process.knowledge_base.id, "kb1")
         self.assertEqual(self.orchestrator.reasoning_process.reasoning_method, ReasoningMethod.DEDUCTION)
 
-    @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    def test_next_step_with_reasoning_process_and_missing_variables(self, mock_prompt_text_gen):
+    def test_next_step_with_reasoning_process_and_missing_variables(self):
         # Set up the mock response for fetching variables
-        mock_prompt_text_gen.return_value = '{"var1": 39, "var2": True}'
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"var1": 39, "var2": True}'
         
         # Set up the knowledge base and reasoning process
         knowledge_base = KnowledgeBase(id="kb1", name="KB1", description="Test KB", reasoning_type=ReasoningType.CRISP)
@@ -116,36 +112,57 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.assertEqual(self.orchestrator.reasoning_process.state, ReasoningState.FINISHED)
         self.assertEqual(self.orchestrator.status, OrchestratorStatus.INFERENCE_FINISHED)
 
-    def test_parse_variable_value(self):
-        # Test parsing boolean value
-        variable = Variable(id="var1", name="Variable 1", value=True)
-        parsed_value = self.orchestrator._parse_variable_value("true", variable)
-        self.assertTrue(parsed_value)
+    def test_fetch_hypothesis_conclusion_success(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        variable2 = Variable(id="hypothesis2", name="Hypothesis 2", value=False)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        rule2 = Rule(conclusion=DeductivePredicate(left_term=variable2, right_term=variable2, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1, rule2])
+        self.orchestrator.knowledge_bases = [knowledge_base]
 
-        # Test parsing boolean value 'yes'
-        variable = Variable(id="var1", name="Variable 1", value=True)
-        parsed_value = self.orchestrator._parse_variable_value("yes", variable)
-        self.assertTrue(parsed_value)
-        
-        # Test parsing integer value
-        variable = Variable(id="var2", name="Variable 2", value=0)
-        parsed_value = self.orchestrator._parse_variable_value("123", variable)
-        self.assertEqual(parsed_value, 123)
-        
-        # Test parsing float value
-        variable = Variable(id="var3", name="Variable 3", value=0.0)
-        parsed_value = self.orchestrator._parse_variable_value("123.45", variable)
-        self.assertEqual(parsed_value, 123.45)
-        
-        # Test parsing list value
-        variable = Variable(id="var4", name="Variable 4", value=[])
-        parsed_value = self.orchestrator._parse_variable_value("1,2,3", variable)
-        self.assertEqual(parsed_value, ["1", "2", "3"])
-        
-        # Test parsing string value
-        variable = Variable(id="var5", name="Variable 5", value="")
-        parsed_value = self.orchestrator._parse_variable_value("test", variable)
-        self.assertEqual(parsed_value, "test")
+        # Mock LLM response
+        self.llm.prompt_text_generation.return_value = '{"hypothesis_id": "hypothesis1"}'
+
+        # Call the function
+        result = self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+
+        # Assertions
+        self.assertEqual(result.id, "hypothesis1")
+        self.assertEqual(result.name, "Hypothesis 1")
+        # self.llm.prompt_text_generation.assert_called_once()
+
+    def test_fetch_hypothesis_conclusion_no_match(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response with an invalid conclusion_id
+        self.llm.prompt_text_generation.return_value = '{"wrongname_id": "hypothesis2"}'
+
+        # Call the function and assert it raises an exception
+        with self.assertRaises(ValueError) as context:
+            self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+        self.assertIn("[Orchestrator]: No matching hypothesis_id found in the response.", str(context.exception))
+        # self.llm.prompt_text_generation.assert_called_once()
+
+    def test_fetch_hypothesis_conclusion_invalid_response(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response with no JSON
+        self.llm.prompt_text_generation.return_value = "Invalid response"
+
+        # Call the function and assert it raises an exception
+        with self.assertRaises(ValueError) as context:
+            self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+        self.assertIn("No JSON object found in the response", str(context.exception))
+        # self.llm.prompt_text_generation.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

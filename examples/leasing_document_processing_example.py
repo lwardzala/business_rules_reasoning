@@ -3,7 +3,7 @@ from business_rules_reasoning import OperatorType
 from business_rules_reasoning.base import KnowledgeBase
 from business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
 from business_rules_reasoning.orchestrator import OrchestratorStatus
-from business_rules_reasoning.orchestrator.llm.huggingface_orchestrator import HuggingFaceOrchestrator
+from business_rules_reasoning.orchestrator.llm import LLMOrchestrator
 
 def knowledge_base_retriever():
     # Build the knowledge base with rules

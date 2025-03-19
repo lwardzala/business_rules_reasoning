@@ -1,5 +1,5 @@
 import unittest
-from src.business_rules_reasoning.orchestrator.llm.retry import retry
+from src.business_rules_reasoning.utils import retry
 
 class TestRetry(unittest.TestCase):
     def test_retry_success_on_first_attempt(self):
