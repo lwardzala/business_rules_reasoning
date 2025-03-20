@@ -49,10 +49,10 @@ class LLMOrchestrator(BaseOrchestrator):
         if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
             missing_variables = self._get_missing_rerasoning_variables()
             missing_variable_ids = [var.id for var in missing_variables]
-            # def validate_output(variables: dict):
-            #     return all([var in missing_variable_ids for var in variables.keys()])
             
             variables_dict = retry(lambda: self._fetch_variables(text, missing_variables), retries=self.retry_policy, validation_func=lambda x: all([var in missing_variable_ids for var in x.keys()]))
+            variables_dict = {key: value for key, value in variables_dict.items() if value is not None}
+            
             self._set_variables_and_continue_reasoning(variables_dict)
 
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
@@ -131,9 +131,7 @@ class LLMOrchestrator(BaseOrchestrator):
         variables_dict = {}
         for var in variables:
             if var.id in data:
-                parsed_value = parse_variable_value(data[var.id], var)
-                if parsed_value is not None:  # Skip variables with None value
-                    variables_dict[var.id] = parsed_value
+                variables_dict[var.id] = parse_variable_value(data[var.id], var)
 
         self._log_inference(f"[Orchestrator]: Parsed variables from prompt: {json.dumps(variables_dict)}")
         
