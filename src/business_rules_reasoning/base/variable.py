@@ -33,7 +33,7 @@ class Variable:
         return self.value is None
 
     def display(self):
-        return f"{self.name} = {self.value}"
+        return f"{self.id} = {self.value}"
 
     def compare_to(self, obj):
         if obj.frequency < self.frequency:

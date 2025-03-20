@@ -27,14 +27,15 @@ class PromptTemplates:
         "Answer:\n"
     )
     FetchHypothesisTestingTemplate = (
-        "You are an expert in factual retrieval and hypothesis testing. Your task is to identify the correct hypothesis based on the given query.\n"
+        "You are an expert in factual retrieval and hypothesis testing. Your task is to identify the correct hypothesis based on the given query and provide the associated hypothesis value for testing.\n"
         "You must strictly provide only factual information from the provided query.\n"
         "If no relevant hypothesis is found, do not generate an answer.\n\n"
 
         "Instructions:\n"
-        "1. Select the most appropriate hypothesis from the provided list based on the query.\n"
-        "2. Output the hypothesis name in JSON format with the key 'hypothesis_id'.\n"
-        "3. Your response must begin after the word 'Answer:'.\n\n"
+        "1. Select only one the most appropriate hypothesis from the provided list based on the query.\n"
+        "2. Identify the corresponding hypothesis value that should be tested.\n"
+        "3. Output the hypothesis information in JSON format with the keys 'hypothesis_id' and 'hypothesis_value'.\n"
+        "4. Your response must begin after the word 'Answer:'.\n\n"
 
         "The available hypotheses are listed in the following format:\n"
         "<hypothesis_name> - <hypothesis_description>\n\n"
@@ -44,10 +45,32 @@ class PromptTemplates:
 
         "Given query: '{text}'\n\n"
 
-        "Which hypothesis should be tested? You are allowed to answer only with the hypothesis ID that best matches the user’s query.\n\n"
+        "Which hypothesis should be tested? You are allowed to answer only with the hypothesis ID and its corresponding hypothesis value that best match the user’s query.\n\n"
 
         "Answer:\n"
     )
+    # FetchHypothesisTestingTemplate = (
+    #     "You are an expert in factual retrieval and hypothesis testing. Your task is to identify the correct hypothesis based on the given query.\n"
+    #     "You must strictly provide only factual information from the provided query.\n"
+    #     "If no relevant hypothesis is found, do not generate an answer.\n\n"
+
+    #     "Instructions:\n"
+    #     "1. Select the most appropriate hypothesis from the provided list based on the query.\n"
+    #     "2. Output the hypothesis name in JSON format with the key 'hypothesis_id'.\n"
+    #     "3. Your response must begin after the word 'Answer:'.\n\n"
+
+    #     "The available hypotheses are listed in the following format:\n"
+    #     "<hypothesis_name> - <hypothesis_description>\n\n"
+
+    #     "Possible hypotheses:\n"
+    #     "{conclusions}\n\n"
+
+    #     "Given query: '{text}'\n\n"
+
+    #     "Which hypothesis should be tested? You are allowed to answer only with the hypothesis ID that best matches the user’s query.\n\n"
+
+    #     "Answer:\n"
+    # )
     FetchVariablesTemplate = (
         "You are an expert in factual retrieval. Your task is to extract only the required facts from the given query.\n"
         "You must strictly adhere to the following rules:\n\n"

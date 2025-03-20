@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline import HuggingFacePipeline
 from src.business_rules_reasoning.orchestrator.llm.llm_orchestrator import LLMOrchestrator, PromptTemplates, OrchestratorStatus
 from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, ReasoningMethod, Variable, Rule, ReasoningType, ReasoningState, EvaluationMessage
@@ -9,8 +8,6 @@ from src.business_rules_reasoning.base.operator_enums import OperatorType
 
 class TestHuggingFaceOrchestrator(unittest.TestCase):
     def setUp(self):
-        self.mock_tokenizer = MagicMock(spec=AutoTokenizer)
-        self.mock_model = MagicMock(spec=AutoModelForCausalLM)
         self.knowledge_base_retriever = MagicMock()
         self.inference_state_retriever = MagicMock()
         self.llm = MagicMock(spec=HuggingFacePipeline)
@@ -163,6 +160,72 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
             self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
         self.assertIn("No JSON object found in the response", str(context.exception))
         # self.llm.prompt_text_generation.assert_called_once()
+
+    def test_fetch_hypothesis_conclusion_success(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        variable2 = Variable(id="hypothesis2", name="Hypothesis 2", value=True)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        rule2 = Rule(conclusion=DeductivePredicate(left_term=variable2, right_term=variable2, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1, rule2])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"hypothesis_id": "hypothesis1", "hypothesis_value": "false"}'
+
+        # Call the function
+        result = self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+
+        # Assertions
+        self.assertEqual(result.id, "hypothesis1")
+        self.assertEqual(result.name, "Hypothesis 1")
+        self.assertFalse(result.value)
+
+    def test_fetch_hypothesis_conclusion_no_match(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response with an invalid hypothesis_id
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"hypothesis_id": "invalid_id"}'
+
+        # Call the function and assert it raises an exception
+        with self.assertRaises(ValueError) as context:
+            self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+        self.assertIn("[Orchestrator]: Could not found any conclusion.", str(context.exception))
+        self.orchestrator.llm.prompt_text_generation.assert_called_once()
+
+    def test_fetch_hypothesis_conclusion_invalid_response(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=None)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response with no JSON
+        self.orchestrator.llm.prompt_text_generation.return_value = "Invalid response"
+
+        # Call the function and assert it raises an exception
+        with self.assertRaises(ValueError) as context:
+            self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+        self.assertIn("No JSON object found in the response", str(context.exception))
+
+    def test_fetch_hypothesis_conclusion_missing_value(self):
+        # Mock knowledge base and rules
+        variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
+        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
+        self.orchestrator.knowledge_bases = [knowledge_base]
+
+        # Mock LLM response with missing hypothesis_value
+        self.orchestrator.llm.prompt_text_generation.return_value = '{"hypothesis_id": "hypothesis1"}'
+
+        # Call the function and assert it raises an exception
+        with self.assertRaises(ValueError) as context:
+            self.orchestrator._fetch_hypothesis_conclusion("test query", "kb1")
+        self.assertIn("[Orchestrator]: No matching hypothesis_value found in the response.", str(context.exception))
 
 if __name__ == '__main__':
     unittest.main()

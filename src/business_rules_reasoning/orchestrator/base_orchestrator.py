@@ -7,6 +7,7 @@ from .variable_source import VariableSource
 from .reasoning_action import ReasoningAction
 from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningService, ReasoningType, EvaluationMessage, Variable
 from ..json_deserializer import deserialize_knowledge_base, deserialize_reasoning_process
+from ..json_serializer import serialize_reasoning_process
 from ..deductive import DeductiveReasoningService
 
 class OrchestratorStatus(Enum):
@@ -122,12 +123,23 @@ class BaseOrchestrator(ABC):
         self._log_inference(f"[Engine]: Providing variables to engine: {', '.join(list(variables_dict.keys()))}.")
         self.reasoning_process = reasoning_service.set_values(self.reasoning_process, variables_dict)
         self.reasoning_process = reasoning_service.continue_reasoning(self.reasoning_process)
-        self._log_inference(f"[Engine]: Reasoning continued. Resulting status: {self.reasoning_process.state}")
+        self._log_inference(f"[Engine]: Reasoning continued. Resulting status: {self.reasoning_process.state}.")
         self.update_engine_status()
 
     def _log_inference(self, text: str):
         self.inference_log.append(text)
 
     def _set_orchestrator_status(self, status: OrchestratorStatus):
-        self._log_inference(f"[Orchestrator]: Changing status from {self.status} to {status}")
+        if self.status == status:
+            self._log_inference(f"[Orchestrator]: Status remains {status}.")
+        else:
+            self._log_inference(f"[Orchestrator]: Changing status from {self.status} to {status}.")
         self.status = status
+
+    def _return_inference_results(self, response: str, return_full_context: bool):
+        return {
+            "inference_session_id": self.inference_session_id,
+            "response": response,
+            "reasoning_process": serialize_reasoning_process(self.reasoning_process),
+            "inference_log": self.inference_log
+        } if return_full_context else response

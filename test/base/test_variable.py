@@ -25,8 +25,8 @@ class TestVariable(unittest.TestCase):
         self.assertTrue(variable.is_empty())
 
     def test_display(self):
-        variable = Variable(id="1", name="test", value=5)
-        self.assertEqual(variable.display(), "test = 5")
+        variable = Variable(id="variable1", name="test", value=5)
+        self.assertEqual(variable.display(), "variable1 = 5")
 
     def test_compare_to(self):
         variable1 = Variable(id="1", name="test1", value=5)

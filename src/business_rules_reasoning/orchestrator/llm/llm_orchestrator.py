@@ -66,8 +66,10 @@ class LLMOrchestrator(BaseOrchestrator):
         # Implement the logic to set the session ID
         self.inference_session_id = "hf_session_id"
 
-    def query(self, text: str) -> str:
+    def query(self, text: str, reset_reasoning = False, return_full_context = False) -> str:
         self._log_query(text, "user")
+        if reset_reasoning:
+            self.reset_orchestration()
         if self.status is None:
             self.start_orchestration()
 
@@ -75,29 +77,28 @@ class LLMOrchestrator(BaseOrchestrator):
         # if inference action
         self._next_step(text)
 
-        # TODO: Handle outputs
         if self.status == OrchestratorStatus.WAITING_FOR_QUERY:
             question = self._ask_for_reasoning_clarification()
             self._log_query(question, "agent")
-            return question
+            return self._return_inference_results(question, return_full_context=return_full_context)
             
         if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
             missing_variables = ", ".join([f"{var.name}" for var in self._get_missing_rerasoning_variables()])
             question = self._ask_for_more_information(missing_variables)
             self._log_query(question, "agent")
-            return question
+            return self._return_inference_results(question, return_full_context=return_full_context)
         
         if self.status == OrchestratorStatus.INFERENCE_ERROR:
             self._log_query(self.reasoning_process.reasoning_error_message, "agent")
-            return self.reasoning_process.reasoning_error_message
+            return self._return_inference_results(self.reasoning_process.reasoning_error_message, return_full_context=return_full_context)
         
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
             response = self._generate_final_answer()
             self._log_query(response, "agent")
-            return response
+            return self._return_inference_results(response, return_full_context=return_full_context)
 
-        self._log_inference(f"[Orchestrator]: Query end.")
-        return 'Nothing'
+        self._log_inference(f"[Orchestrator]: Query finished unexpectedly.")
+        return self._return_inference_results('Query finished unexpectedly.', return_full_context=return_full_context)
 
     def _fetch_inference_instructions(self, text: str) -> Tuple[str, ReasoningMethod]:
         knowledge_bases_info = "\n".join([f"{kb.id} - {kb.description}" for kb in self.knowledge_bases])
@@ -171,9 +172,12 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _generate_final_answer(self) -> str:
         if (self.reasoning_process.reasoned_items is None) or (len(self.reasoning_process.reasoned_items) == 0):
-            conclusions = "No conclusions were reasoned. Cannot provide the answer based on the provided facts."
+            if self.reasoning_process.reasoning_method == ReasoningMethod.HYPOTHESIS_TESTING:
+                conclusions = f'Cannot confirm the hypothesis that {self.reasoning_process.options["hypothesis"].display()}.'
+            else:
+                conclusions = "No conclusions were reasoned. Cannot provide the answer based on the provided facts."
         else:
-            conclusions = "\n".join([f"{item.display()}" for item in self.reasoning_process.reasoned_items])
+            conclusions = "\n".join([f"- {item.display()}" for item in self.reasoning_process.reasoned_items])
         context = "\n".join([entry['text'] for entry in self.query_log if entry['role'] == 'user'])
         prompt = self.prompt_templates.FinishInferenceTemplate.format(agent_type=self.agent_type, conclusions=conclusions, context=context)
         self._log_inference(f"[Orchestrator]: Prompting for answer generation...")
@@ -200,5 +204,14 @@ class LLMOrchestrator(BaseOrchestrator):
         conclusion_id = data.get("hypothesis_id")
         if not conclusion_id:
             raise ValueError("[Orchestrator]: No matching hypothesis_id found in the response.")
-        
-        return next((conclusion for conclusion in conclusions if conclusion.id == conclusion_id), None)
+        hypothesis = next((conclusion for conclusion in conclusions if conclusion.id == conclusion_id), None)
+        if hypothesis is None:
+            raise ValueError("[Orchestrator]: Could not found any conclusion.")
+        value = data.get("hypothesis_value")
+        if not value:
+            raise ValueError("[Orchestrator]: No matching hypothesis_value found in the response.")
+        value = parse_variable_value(value, hypothesis)
+        hypothesis.value = value
+        self._log_inference(f"[Orchestrator]: Hypothesis retrieved: {hypothesis.display()}.")
+
+        return hypothesis
