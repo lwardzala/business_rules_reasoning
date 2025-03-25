@@ -148,8 +148,8 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         # Mock knowledge base and rules
         variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
         variable2 = Variable(id="hypothesis2", name="Hypothesis 2", value=True)
-        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
-        rule2 = Rule(conclusion=DeductivePredicate(left_term=variable2, right_term=variable2, operator=OperatorType.EQUAL))
+        rule1 = Rule(conclusion=DeductiveConclusion(variable1))
+        rule2 = Rule(conclusion=DeductiveConclusion(variable2))
         knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1, rule2])
         self.orchestrator.knowledge_bases = [knowledge_base]
 
@@ -167,7 +167,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
     def test_fetch_hypothesis_conclusion_no_match(self):
         # Mock knowledge base and rules
         variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
-        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        rule1 = Rule(conclusion=DeductiveConclusion(variable1))
         knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
         self.orchestrator.knowledge_bases = [knowledge_base]
 
@@ -183,7 +183,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
     def test_fetch_hypothesis_conclusion_invalid_response(self):
         # Mock knowledge base and rules
         variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=None)
-        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        rule1 = Rule(conclusion=DeductiveConclusion(variable1))
         knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
         self.orchestrator.knowledge_bases = [knowledge_base]
 
@@ -198,7 +198,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
     def test_fetch_hypothesis_conclusion_missing_value(self):
         # Mock knowledge base and rules
         variable1 = Variable(id="hypothesis1", name="Hypothesis 1", value=True)
-        rule1 = Rule(conclusion=DeductivePredicate(left_term=variable1, right_term=variable1, operator=OperatorType.EQUAL))
+        rule1 = Rule(conclusion=DeductiveConclusion(variable1))
         knowledge_base = KnowledgeBase(id="kb1", rule_set=[rule1])
         self.orchestrator.knowledge_bases = [knowledge_base]
 

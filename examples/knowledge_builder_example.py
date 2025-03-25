@@ -1,9 +1,6 @@
 from src.business_rules_reasoning.deductive import KnowledgeBaseBuilder, RuleBuilder, PredicateBuilder, VariableBuilder
 from src.business_rules_reasoning import OperatorType
 
-# Create variables
-age_variable = VariableBuilder().set_id("age").set_name("Age").unwrap()
-
 # Create predicates
 toddler_predicate = PredicateBuilder().configure_predicate("age", OperatorType.LESS_OR_EQUAL, 3).unwrap()
 child_predicate = PredicateBuilder().configure_predicate("age", OperatorType.BETWEEN, [4, 12]).unwrap()
@@ -11,10 +8,10 @@ teenager_predicate = PredicateBuilder().configure_predicate("age", OperatorType.
 adult_predicate = PredicateBuilder().configure_predicate("age", OperatorType.GREATER_OR_EQUAL, 20).unwrap()
 
 # Create rules
-toddler_rule = RuleBuilder().set_conclusion(age_variable).add_predicate(toddler_predicate).unwrap()
-child_rule = RuleBuilder().set_conclusion(age_variable).add_predicate(child_predicate).unwrap()
-teenager_rule = RuleBuilder().set_conclusion(age_variable).add_predicate(teenager_predicate).unwrap()
-adult_rule = RuleBuilder().set_conclusion(age_variable).add_predicate(adult_predicate).unwrap()
+toddler_rule = RuleBuilder().set_conclusion(VariableBuilder().set_id("age").set_name("Age").set_value("toddler").unwrap()).add_predicate(toddler_predicate).unwrap()
+child_rule = RuleBuilder().set_conclusion(VariableBuilder().set_id("age").set_name("Age").set_value("child").unwrap()).add_predicate(child_predicate).unwrap()
+teenager_rule = RuleBuilder().set_conclusion(VariableBuilder().set_id("age").set_name("Age").set_value("teenager").unwrap()).add_predicate(teenager_predicate).unwrap()
+adult_rule = RuleBuilder().set_conclusion(VariableBuilder().set_id("age").set_name("Age").set_value("adult").unwrap()).add_predicate(adult_predicate).unwrap()
 
 # Build knowledge base
 knowledge_base = KnowledgeBaseBuilder() \

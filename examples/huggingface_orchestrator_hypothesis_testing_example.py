@@ -72,5 +72,9 @@ def main():
     # Print the response
     print("Response:", response)
 
+    print(orchestrator.reasoning_process.display_state())
+
+    print('\n'.join(orchestrator.inference_logger.get_log()))
+
 if __name__ == "__main__":
     main()

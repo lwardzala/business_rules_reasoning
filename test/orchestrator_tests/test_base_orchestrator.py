@@ -63,7 +63,8 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         knowledge_base.rule_set.append(rule)
         self.orchestrator.reasoning_process = ReasoningProcess(reasoning_method=ReasoningMethod.DEDUCTION, knowledge_base=knowledge_base)
         variables_dict = {"var1": 15, "var2": 5}
-        self.orchestrator._set_variables_and_continue_reasoning(variables_dict)
+        self.orchestrator._set_variables(variables_dict)
+        self.orchestrator._continue_reasoning()
         self.assertEqual(self.orchestrator.reasoning_process.state, ReasoningState.FINISHED)
 
 class TestBaseOrchestratorOptions(unittest.TestCase):
@@ -86,6 +87,10 @@ class TestBaseOrchestratorOptions(unittest.TestCase):
 
 class TestInferenceLogger(unittest.TestCase):
     def test_log_and_retrieve(self):
+        logger = InferenceLogger()
+        logger.log("Test message 4")
+        logger.log("Test message 3")
+
         logger = InferenceLogger()
         logger.log("Test message 1")
         logger.log("Test message 2")

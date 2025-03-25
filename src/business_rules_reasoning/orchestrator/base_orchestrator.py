@@ -16,6 +16,7 @@ class OrchestratorStatus(Enum):
     WAITING_FOR_QUERY = 'WAITING_FOR_QUERY'
     STARTED = 'STARTED'
     ENGINE_WAITING_FOR_VARIABLES = 'ENGINE_WAITING_FOR_VARIABLES'
+    FACT_QUESTIONING_MODE = 'FACT_RETRIEVAL_MODE'
     INFERENCE_FINISHED = 'INFERENCE_FINISHED'
     INFERENCE_ERROR = 'INFERENCE_ERROR'
 
@@ -31,7 +32,7 @@ class OrchestratorOptions:
         self.pass_facts_as_arguments = pass_facts_as_arguments
 
 class BaseOrchestrator(ABC):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, options: OrchestratorOptions, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, logger: InferenceLogger = InferenceLogger()):
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, options: OrchestratorOptions, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None):
         self.knowledge_base_retriever = knowledge_base_retriever
         self.inference_state_retriever = inference_state_retriever
         self.knowledge_bases: List[KnowledgeBase] = []
@@ -40,7 +41,7 @@ class BaseOrchestrator(ABC):
         self.variable_sources = variable_sources
         self.status = None
         self.reasoning_process: ReasoningProcess = None
-        self.inference_logger = logger
+        self.inference_logger = InferenceLogger()
         self.options = options
 
     @abstractmethod
@@ -121,14 +122,16 @@ class BaseOrchestrator(ABC):
         return reasoning_service.get_all_missing_variables(self.reasoning_process).copy()
     
      # TODO: Update the values from further queries
-    def _set_variables_and_continue_reasoning(self, variables_dict: dict):
+    def _continue_reasoning(self):
         reasoning_service = self.get_reasoning_service()
-        self._log_inference(f"[Engine]: Status: {self.reasoning_process.state}.")
-        self._log_inference(f"[Engine]: Providing variables to engine: {', '.join(list(variables_dict.keys()))}.")
-        self.reasoning_process = reasoning_service.set_values(self.reasoning_process, variables_dict)
         self.reasoning_process = reasoning_service.continue_reasoning(self.reasoning_process)
         self._log_inference(f"[Engine]: Reasoning continued. Resulting status: {self.reasoning_process.state}.")
         self.update_engine_status()
+
+    def _set_variables(self, variables_dict: dict):
+        reasoning_service = self.get_reasoning_service()
+        self._log_inference(f"[Engine]: Providing variables to engine: {', '.join(list(variables_dict.keys()))}.")
+        self.reasoning_process = reasoning_service.set_values(self.reasoning_process, variables_dict)
 
     def _log_inference(self, text: str):
         self.inference_logger.log(text)

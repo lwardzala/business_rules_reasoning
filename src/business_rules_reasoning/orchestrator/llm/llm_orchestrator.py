@@ -11,8 +11,8 @@ from .prompt_templates import PromptTemplates
 from .llm_pipeline_base import LLMPipelineBase
 
 class LLMOrchestrator(BaseOrchestrator):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), logger: InferenceLogger = InferenceLogger(), **kwargs):
-        super().__init__(knowledge_base_retriever, inference_state_retriever, options, inference_session_id, actions, variable_sources, logger)
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), **kwargs):
+        super().__init__(knowledge_base_retriever, inference_state_retriever, options, inference_session_id, actions, variable_sources)
         self.llm = llm
         self.query_log: List[Dict[str, str]] = []
         self.prompt_templates = prompt_templates
@@ -62,7 +62,32 @@ class LLMOrchestrator(BaseOrchestrator):
                 )
                 variables_dict = {key: value for key, value in variables_dict.items() if value is not None}
 
-                self._set_variables_and_continue_reasoning(variables_dict)
+                self._set_variables(variables_dict)
+                self._continue_reasoning()
+
+                if self.options.variables_fetching == VariablesFetchingMode.STEP_BY_STEP and self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
+                    self._set_orchestrator_status(OrchestratorStatus.FACT_QUESTIONING_MODE)
+
+        if self.status == OrchestratorStatus.FACT_QUESTIONING_MODE:
+            response = self._get_missing_reasoning_variables()
+            if len(response) == 0:
+                self._continue_reasoning()
+            
+            missing_variables = [response[0]]
+            missing_variable_ids = [var.id for var in missing_variables]
+
+            variables_dict = retry(
+                lambda: self._fetch_variables(text, missing_variables),
+                retries=self.retry_policy,
+                validation_func=lambda x: all(var in missing_variable_ids for var in x.keys())
+            )
+            variables_dict = {key: value for key, value in variables_dict.items() if value is not None}
+
+            self._set_variables(variables_dict)
+
+            check_variables = self._get_missing_reasoning_variables()
+            if len(check_variables) == 0:
+                self._continue_reasoning()
 
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
             # TODO: find and fire the actions accordingly to the conclusions
@@ -91,11 +116,11 @@ class LLMOrchestrator(BaseOrchestrator):
             self._log_query(question, "agent")
             return self._return_inference_results(question, return_full_context=return_full_context)
             
-        if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
+        if self.status in [OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES, OrchestratorStatus.FACT_QUESTIONING_MODE]:
             if self.options.variables_fetching == VariablesFetchingMode.STEP_BY_STEP:
-                missing_variables = self._get_missing_reasoning_variables()[0].name
+                missing_variables = [self._get_missing_reasoning_variables()[0]]
             else:
-                missing_variables = ", ".join([f"{var.name}" for var in self._get_missing_reasoning_variables()])
+                missing_variables = self._get_missing_reasoning_variables()
             question = self._ask_for_more_information(missing_variables)
             self._log_query(question, "agent")
             return self._return_inference_results(question, return_full_context=return_full_context)
@@ -150,10 +175,12 @@ class LLMOrchestrator(BaseOrchestrator):
         
         return variables_dict
 
-    def _ask_for_more_information(self, variables: str) -> str:
-        context = "\n".join([f"{entry['role']}: {entry['text']}" for entry in self.query_log if entry['role'] in ['user', 'agent']])
-        prompt = self.prompt_templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=variables, context=context)
-        self._log_inference(f"[Orchestrator]: Prompting to ask for more information...")
+    def _ask_for_more_information(self, variables: List[Variable]) -> str:
+        missing_variables_text = "\n".join([f"{var.id} - {var.name}" for var in variables])
+
+        # context = "\n".join([f"{entry['role']}: {entry['text']}" for entry in self.query_log if entry['role'] in ['user', 'agent']])
+        prompt = self.prompt_templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=missing_variables_text)
+        self._log_inference(f"[Orchestrator]: Prompting to ask for more information about: {', '.join(var.id for var in variables)} ...")
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
         self._log_query(response, "system")

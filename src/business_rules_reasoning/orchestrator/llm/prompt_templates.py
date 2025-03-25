@@ -89,9 +89,6 @@ class PromptTemplates:
         "Required facts:\n"
         "{variables}\n\n"
 
-        "Context from previous messages:\n"
-        "{context}\n\n"
-
         "Ask for the missing facts using simple and clear language.\n\n"
 
         "Question:\n"
