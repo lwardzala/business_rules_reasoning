@@ -1,9 +1,10 @@
 from typing import List
 from .predicate import Predicate
+from .conclusion import Conclusion
 
 class Rule:
-    def __init__(self, conclusion: Predicate = None, predicates: List[Predicate] = None):
-        self.conclusion: Predicate = conclusion
+    def __init__(self, conclusion: Conclusion = None, predicates: List[Predicate] = None):
+        self.conclusion: Conclusion = conclusion
         self.predicates: List[Predicate] = predicates if predicates is not None else []
         self.result = False
         self.evaluated = False
@@ -27,9 +28,10 @@ class Rule:
             self.evaluated = True
 
     def is_valid(self):
-        return all(predicate.get_missing_variables() is None and predicate.is_valid() for predicate in self.predicates)
+        return all(predicate.get_missing_variables() is None and predicate.is_valid() for predicate in self.predicates) and self.conclusion.is_valid()
     
     def validate(self):
+        self.conclusion.validate()
         for predicate in self.predicates:
             predicate.validate()
 

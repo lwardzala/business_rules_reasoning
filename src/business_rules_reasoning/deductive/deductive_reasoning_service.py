@@ -84,8 +84,8 @@ class DeductiveReasoningService(ReasoningService):
                 if not rule.evaluated:
                     rule.evaluate()
                 if rule.evaluated and rule.result:
-                    if rule.conclusion.right_term not in reasoning_process.reasoned_items:
-                        reasoning_process.reasoned_items.append(rule.conclusion.right_term)
+                    if rule.conclusion.get_variable() not in reasoning_process.reasoned_items:
+                        reasoning_process.reasoned_items.append(rule.conclusion.get_variable())
         except Exception as e:
             reasoning_process.evaluation_message = EvaluationMessage.ERROR
             reasoning_process.state = ReasoningState.FINISHED
@@ -106,12 +106,12 @@ class DeductiveReasoningService(ReasoningService):
             raise Exception("[Reasoning Engine]: Hypothesis not provided in reasoning process options.")
         
         hypothesis = reasoning_process.options["hypothesis"]
-        rules = [rule for rule in reasoning_process.knowledge_base.rule_set if rule.conclusion.right_term.id == hypothesis.id and rule.conclusion.right_term.value == hypothesis.value]
+        rules = [rule for rule in reasoning_process.knowledge_base.rule_set if rule.conclusion.get_id() == hypothesis.id and rule.conclusion.get_value() == hypothesis.value]
         try:
             for rule in rules:
                 if not rule.evaluated:
                     rule.evaluate()
-                if rule.evaluated and rule.result and rule.conclusion.right_term.id == hypothesis.id and rule.conclusion.right_term.value == hypothesis.value:
+                if rule.evaluated and rule.result and rule.conclusion.get_id() == hypothesis.id and rule.conclusion.get_value() == hypothesis.value:
                     reasoning_process.reasoned_items = [hypothesis]
         except Exception as e:
             reasoning_process.evaluation_message = EvaluationMessage.ERROR

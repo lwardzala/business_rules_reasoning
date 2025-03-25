@@ -2,8 +2,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 from src.business_rules_reasoning.orchestrator.base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions, VariablesFetchingMode
 from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, ReasoningMethod, Variable, Rule, ReasoningType, ReasoningState, EvaluationMessage
-from src.business_rules_reasoning.deductive import DeductivePredicate
+from src.business_rules_reasoning.deductive import DeductivePredicate, DeductiveConclusion
 from src.business_rules_reasoning.base.operator_enums import OperatorType
+from src.business_rules_reasoning.orchestrator.inference_logger import InferenceLogger
 
 class TestBaseOrchestrator(BaseOrchestrator):
     def _next_step(self):
@@ -44,10 +45,10 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         var2 = Variable(id="var2", name="Variable 2", value=None)
         predicate1 = DeductivePredicate(left_term=var1, right_term=Variable(id="var1", value=10), operator=OperatorType.GREATER_THAN)
         predicate2 = DeductivePredicate(left_term=var2, right_term=Variable(id="var2", value=20), operator=OperatorType.LESS_THAN)
-        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductivePredicate(left_term=Variable(), right_term=Variable(id="conclusion", value=True), operator=OperatorType.EQUAL))
+        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductiveConclusion(Variable(id="conclusion", value=True)))
         knowledge_base.rule_set.append(rule)
         self.orchestrator.reasoning_process = ReasoningProcess(reasoning_method=ReasoningMethod.DEDUCTION, knowledge_base=knowledge_base)
-        missing_variables = self.orchestrator._get_missing_rerasoning_variables()
+        missing_variables = self.orchestrator._get_missing_reasoning_variables()
         self.assertEqual(len(missing_variables), 2)
         self.assertEqual(missing_variables[0].id, "var1")
         self.assertEqual(missing_variables[1].id, "var2")
@@ -58,7 +59,7 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         var2 = Variable(id="var2", name="Variable 2", value=None)
         predicate1 = DeductivePredicate(left_term=var1, right_term=Variable(id="var1", value=10), operator=OperatorType.GREATER_THAN)
         predicate2 = DeductivePredicate(left_term=var2, right_term=Variable(id="var2", value=20), operator=OperatorType.LESS_THAN)
-        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductivePredicate(left_term=Variable(), right_term=Variable(id="conclusion", value=True), operator=OperatorType.EQUAL))
+        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductiveConclusion(Variable(id="conclusion", value=True)))
         knowledge_base.rule_set.append(rule)
         self.orchestrator.reasoning_process = ReasoningProcess(reasoning_method=ReasoningMethod.DEDUCTION, knowledge_base=knowledge_base)
         variables_dict = {"var1": 15, "var2": 5}
@@ -82,6 +83,25 @@ class TestBaseOrchestratorOptions(unittest.TestCase):
             options=options
         )
         self.assertEqual(orchestrator.options.variables_fetching, VariablesFetchingMode.STEP_BY_STEP)
+
+class TestInferenceLogger(unittest.TestCase):
+    def test_log_and_retrieve(self):
+        logger = InferenceLogger()
+        logger.log("Test message 1")
+        logger.log("Test message 2")
+        self.assertEqual(logger.get_log(), ["Test message 1", "Test message 2"])
+
+    def test_clear_log(self):
+        logger = InferenceLogger()
+        logger.log("Test message")
+        logger.clear_log()
+        self.assertEqual(logger.get_log(), [])
+
+    def test_log_length(self):
+        logger = InferenceLogger()
+        logger.log("Test message 1")
+        logger.log("Test message 2")
+        self.assertEqual(len(logger), 2)
 
 if __name__ == '__main__':
     unittest.main()

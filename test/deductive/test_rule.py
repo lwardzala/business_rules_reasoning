@@ -1,8 +1,6 @@
 import unittest
-from src.business_rules_reasoning.base.rule import Rule
-from src.business_rules_reasoning.base.variable import Variable
+from src.business_rules_reasoning.base import Rule, Variable, OperatorType
 from src.business_rules_reasoning.deductive import DeductivePredicate
-from src.business_rules_reasoning.base import OperatorType
 
 class TestRule(unittest.TestCase):
     def test_initialization(self):

@@ -9,6 +9,7 @@ from ..base import KnowledgeBase, ReasoningState, ReasoningProcess, ReasoningSer
 from ..json_deserializer import deserialize_knowledge_base, deserialize_reasoning_process
 from ..json_serializer import serialize_reasoning_process
 from ..deductive import DeductiveReasoningService
+from .inference_logger import InferenceLogger
 
 class OrchestratorStatus(Enum):
     INITIALIZED = 'INITIALIZED'
@@ -23,11 +24,14 @@ class VariablesFetchingMode(Enum):
     ALL_POSSIBLE = 'ALL_POSSIBLE'
 
 class OrchestratorOptions:
-    def __init__(self, variables_fetching: VariablesFetchingMode = VariablesFetchingMode.ALL_POSSIBLE):
+    def __init__(self, variables_fetching: VariablesFetchingMode = VariablesFetchingMode.ALL_POSSIBLE, conclusion_as_fact: bool = False, pass_conclusions_as_arguments: bool = True, pass_facts_as_arguments: bool = True):
         self.variables_fetching = variables_fetching
+        self.conclusion_as_fact = conclusion_as_fact
+        self.pass_conclusions_as_arguments = pass_conclusions_as_arguments
+        self.pass_facts_as_arguments = pass_facts_as_arguments
 
 class BaseOrchestrator(ABC):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, options: OrchestratorOptions, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None):
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, options: OrchestratorOptions, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, logger: InferenceLogger = InferenceLogger()):
         self.knowledge_base_retriever = knowledge_base_retriever
         self.inference_state_retriever = inference_state_retriever
         self.knowledge_bases: List[KnowledgeBase] = []
@@ -36,7 +40,7 @@ class BaseOrchestrator(ABC):
         self.variable_sources = variable_sources
         self.status = None
         self.reasoning_process: ReasoningProcess = None
-        self.inference_log: List[str] = []
+        self.inference_logger = logger
         self.options = options
 
     @abstractmethod
@@ -111,10 +115,10 @@ class BaseOrchestrator(ABC):
         self._log_inference(f"[Engine]: Reasoning process was started. Resulting status: {self.reasoning_process.state}")
         self.update_engine_status()
 
-    def _get_missing_rerasoning_variables(self) -> List[Variable]:
+    def _get_missing_reasoning_variables(self) -> List[Variable]:
         reasoning_service = self.get_reasoning_service()
         self._log_inference(f"[Engine]: Status: {self.reasoning_process.state} Retrieving missing variables.")
-        return reasoning_service.get_all_missing_variables(self.reasoning_process)
+        return reasoning_service.get_all_missing_variables(self.reasoning_process).copy()
     
      # TODO: Update the values from further queries
     def _set_variables_and_continue_reasoning(self, variables_dict: dict):
@@ -127,7 +131,7 @@ class BaseOrchestrator(ABC):
         self.update_engine_status()
 
     def _log_inference(self, text: str):
-        self.inference_log.append(text)
+        self.inference_logger.log(text)
 
     def _set_orchestrator_status(self, status: OrchestratorStatus):
         if self.status == status:
@@ -141,5 +145,5 @@ class BaseOrchestrator(ABC):
             "inference_session_id": self.inference_session_id,
             "response": response,
             "reasoning_process": serialize_reasoning_process(self.reasoning_process),
-            "inference_log": self.inference_log
+            "inference_log": self.inference_logger.get_log()
         } if return_full_context else response

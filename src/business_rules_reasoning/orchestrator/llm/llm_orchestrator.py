@@ -5,13 +5,14 @@ from ...utils import retry, parse_variable_value, extract_json_from_response
 from ...base import ReasoningState, ReasoningProcess, ReasoningService, ReasoningMethod, Variable
 from ..reasoning_action import ReasoningAction
 from ..variable_source import VariableSource
-from ..base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions
+from ..inference_logger import InferenceLogger
+from ..base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions, VariablesFetchingMode
 from .prompt_templates import PromptTemplates
 from .llm_pipeline_base import LLMPipelineBase
 
 class LLMOrchestrator(BaseOrchestrator):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), **kwargs):
-        super().__init__(knowledge_base_retriever, inference_state_retriever, options, inference_session_id, actions, variable_sources)
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), logger: InferenceLogger = InferenceLogger(), **kwargs):
+        super().__init__(knowledge_base_retriever, inference_state_retriever, options, inference_session_id, actions, variable_sources, logger)
         self.llm = llm
         self.query_log: List[Dict[str, str]] = []
         self.prompt_templates = prompt_templates
@@ -47,13 +48,21 @@ class LLMOrchestrator(BaseOrchestrator):
             self._start_reasoning_process()
         
         if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
-            missing_variables = self._get_missing_rerasoning_variables()
-            missing_variable_ids = [var.id for var in missing_variables]
-            
-            variables_dict = retry(lambda: self._fetch_variables(text, missing_variables), retries=self.retry_policy, validation_func=lambda x: all([var in missing_variable_ids for var in x.keys()]))
-            variables_dict = {key: value for key, value in variables_dict.items() if value is not None}
-            
-            self._set_variables_and_continue_reasoning(variables_dict)
+            missing_variables = self._get_missing_reasoning_variables()
+            iterations = len(missing_variables) if self.options.variables_fetching == VariablesFetchingMode.STEP_BY_STEP else 1
+
+            for i in range(iterations):
+                missing_variables_subset = [missing_variables[i]] if iterations > 1 else missing_variables
+                missing_variable_ids = [var.id for var in missing_variables_subset]
+
+                variables_dict = retry(
+                    lambda: self._fetch_variables(text, missing_variables_subset),
+                    retries=self.retry_policy,
+                    validation_func=lambda x: all(var in missing_variable_ids for var in x.keys())
+                )
+                variables_dict = {key: value for key, value in variables_dict.items() if value is not None}
+
+                self._set_variables_and_continue_reasoning(variables_dict)
 
         if self.status == OrchestratorStatus.INFERENCE_FINISHED:
             # TODO: find and fire the actions accordingly to the conclusions
@@ -83,7 +92,10 @@ class LLMOrchestrator(BaseOrchestrator):
             return self._return_inference_results(question, return_full_context=return_full_context)
             
         if self.status == OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES:
-            missing_variables = ", ".join([f"{var.name}" for var in self._get_missing_rerasoning_variables()])
+            if self.options.variables_fetching == VariablesFetchingMode.STEP_BY_STEP:
+                missing_variables = self._get_missing_reasoning_variables()[0].name
+            else:
+                missing_variables = ", ".join([f"{var.name}" for var in self._get_missing_reasoning_variables()])
             question = self._ask_for_more_information(missing_variables)
             self._log_query(question, "agent")
             return self._return_inference_results(question, return_full_context=return_full_context)
@@ -188,11 +200,11 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _fetch_hypothesis_conclusion(self, text: str, knowledge_base_id: str) -> Variable:
         knowledge_base_rules = next((kb.rule_set for kb in self.knowledge_bases if kb.id == knowledge_base_id), None)
-        conclusions_info = "\n".join([f"{rule.conclusion.right_term.id} - {rule.conclusion.right_term.name}" for rule in knowledge_base_rules])
-        conclusions = [rule.conclusion.right_term for rule in knowledge_base_rules]
+        conclusions_info = "\n".join([f"{rule.conclusion.get_variable().id} - {rule.conclusion.get_variable().name}" for rule in knowledge_base_rules])
+        conclusions = [rule.conclusion.get_variable() for rule in knowledge_base_rules]
 
         prompt = self.prompt_templates.FetchHypothesisTestingTemplate.format(conclusions=conclusions_info, text=text)
-        self._log_inference(f"[Orchestrator]: Prompting for hypothesis conclusion...")
+        self._log_inference(f"[Orchestrator]: Prompting for hypothesis from available conclusions...")
         self._log_query(prompt, "engine")
 
         response = self.llm.prompt_text_generation(prompt)

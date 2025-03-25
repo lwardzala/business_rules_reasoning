@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline import HuggingFacePipeline
-from src.business_rules_reasoning.orchestrator.llm.llm_orchestrator import LLMOrchestrator, PromptTemplates, OrchestratorStatus
 from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, ReasoningMethod, Variable, Rule, ReasoningType, ReasoningState, EvaluationMessage
-from src.business_rules_reasoning.deductive import DeductivePredicate
 from src.business_rules_reasoning.base.operator_enums import OperatorType
+from src.business_rules_reasoning.deductive import DeductivePredicate, DeductiveConclusion
+from src.business_rules_reasoning.orchestrator import OrchestratorStatus
+from src.business_rules_reasoning.orchestrator.llm import HuggingFacePipeline, LLMOrchestrator, PromptTemplates
 
 class TestHuggingFaceOrchestrator(unittest.TestCase):
     def setUp(self):
@@ -44,23 +44,6 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.assertEqual(variables_dict["var1"], 39)
         self.assertEqual(variables_dict["var2"], True)
 
-    # @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    # def test_ask_for_more_information(self, mock_prompt_text_gen):
-    #     mock_prompt_text_gen.return_value = "question: Can you provide more details about var1?"
-    #     self.orchestrator.query_log = [
-    #         {"role": "user", "text": "Initial query"},
-    #         {"role": "agent", "text": "Response from agent"}
-    #     ]
-    #     question = self.orchestrator._ask_for_more_information("var1")
-    #     self.assertEqual(question, "Can you provide more details about var1?")
-
-    # @patch('src.business_rules_reasoning.orchestrator.llm.huggingface_pipeline.HuggingFacePipeline.prompt_text_generation')
-    # def test_ask_for_reasoning_clarification(self, mock_prompt_text_gen):
-    #     mock_prompt_text_gen.return_value = "question: Can you clarify the reasoning needed?"
-    #     self.orchestrator.knowledge_bases = [KnowledgeBase(name="KB1", description="Test KB")]
-    #     question = self.orchestrator._ask_for_reasoning_clarification()
-    #     self.assertEqual(question, "Can you clarify the reasoning needed?")
-
     def test_set_reasoning_process(self):
         knowledge_base = KnowledgeBase(id="kb1", name="KBbb1", description="Test KB")
         self.orchestrator.knowledge_bases = [knowledge_base]
@@ -86,7 +69,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         predicate2 = DeductivePredicate(left_term=var2, right_term=Variable(id="var2", value=True), operator=OperatorType.LESS_THAN)
         
         # Create rule
-        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductivePredicate(left_term=Variable(), right_term=Variable(id="conclusion", value=True), operator=OperatorType.EQUAL))
+        rule = Rule(predicates=[predicate1, predicate2], conclusion=DeductiveConclusion(Variable(id="conclusion", value=True)))
         
         # Add rule to knowledge base
         knowledge_base.rule_set.append(rule)

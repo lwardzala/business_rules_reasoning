@@ -1,6 +1,6 @@
-from ..base import KnowledgeBase, Rule, Predicate, Variable
-from . import DeductivePredicate
-from ..base import OperatorType, ReasoningType
+from ..base import KnowledgeBase, Rule, Predicate, Variable, OperatorType, ReasoningType
+from .deductive_predicate import DeductivePredicate
+from .deductive_conclusion import DeductiveConclusion
 
 class KnowledgeBaseBuilder:
     def __init__(self):
@@ -34,6 +34,7 @@ class KnowledgeBaseBuilder:
         return self
 
     def unwrap(self):
+        self.knowledge_base.validate()
         return self.knowledge_base
 
 class RuleBuilder:
@@ -44,7 +45,7 @@ class RuleBuilder:
         self.rule.evaluated = False
 
     def set_conclusion(self, rule_conclusion: Variable):
-        self.rule.conclusion = DeductivePredicate(left_term=rule_conclusion, right_term=rule_conclusion, operator=OperatorType.EQUAL)
+        self.rule.conclusion = DeductiveConclusion(variable=rule_conclusion)
         return self
 
     def add_predicate(self, predicate: Predicate):
@@ -52,6 +53,7 @@ class RuleBuilder:
         return self
 
     def unwrap(self):
+        self.rule.validate()
         return self.rule
 
 class PredicateBuilder:
@@ -92,6 +94,7 @@ class PredicateBuilder:
         return self
 
     def unwrap(self):
+        self.predicate.validate()
         return self.predicate
 
 class VariableBuilder:
