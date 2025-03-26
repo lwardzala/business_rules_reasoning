@@ -1,5 +1,7 @@
 # Business Rules Reasoning System
 
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/lwardzala)
+
 ## Introduction
 
 This is a Python implementation of my previous project [Business Rules Reasoning System](https://github.com/lwardzala/Business-Rules-Reasoning-System), enhanced with a reasoning orchestrator that leverages Large Language Models (LLMs) to enable a fully transparent and explainable logical reasoning system for business automation. 
