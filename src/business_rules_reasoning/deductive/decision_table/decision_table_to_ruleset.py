@@ -1,9 +1,9 @@
 import pandas as pd
 from typing import List
+import re
 from ..knowledge_builder import RuleBuilder, PredicateBuilder, VariableBuilder
 from ...base.operator_enums import OperatorType
 from ...base.rule import Rule
-import re
 
 def to_snake_case(name: str) -> str:
     return '_'.join(
@@ -35,10 +35,15 @@ def parse_cell_value(cell_value: str):
         match = re.match(pattern, str(cell_value).strip())
         if match:
             value = match.group(1)
-            if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
-                value = [float(v.strip()) for v in value.split(",")]
+            if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.SUBSET, OperatorType.NOT_SUBSET, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
+                value = [
+                    bool(v.strip()) if v.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else
+                    float(v.strip()) if v.strip().replace('.', '', 1).isdigit() else
+                    v.strip()
+                    for v in value.split(",")
+                ]
             else:
-                value = float(value) if value.replace('.', '', 1).isdigit() else value
+                value = bool(value.strip()) if value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(value.strip()) if value.strip().replace('.', '', 1).isdigit() else value.strip()
             return operator, value
 
     # Default to EQUAL if no operator is found

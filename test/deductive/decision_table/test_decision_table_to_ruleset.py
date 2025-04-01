@@ -51,7 +51,7 @@ class TestDecisionTableToRuleset(unittest.TestCase):
     def test_pandas_to_rules_without_operators(self):
         data = {
             "age": [18, 25, 40],
-            "income": [3000, 4000, 5000],
+            "income": ['low', 'medium', 'is_in(high, very_high)'],
             "loan_approved": [False, True, True]
         }
         df = pd.DataFrame(data)
@@ -69,7 +69,7 @@ class TestDecisionTableToRuleset(unittest.TestCase):
         self.assertEqual(rule1.predicates[0].operator, OperatorType.EQUAL)
         self.assertEqual(rule1.predicates[0].right_term.value, 18)
         self.assertEqual(rule1.predicates[1].operator, OperatorType.EQUAL)
-        self.assertEqual(rule1.predicates[1].right_term.value, 3000)
+        self.assertEqual(rule1.predicates[1].right_term.value, 'low')
 
         rule2 = rules[1]
         rule2.validate()
@@ -79,7 +79,7 @@ class TestDecisionTableToRuleset(unittest.TestCase):
         self.assertEqual(rule2.predicates[0].operator, OperatorType.EQUAL)
         self.assertEqual(rule2.predicates[0].right_term.value, 25)
         self.assertEqual(rule2.predicates[1].operator, OperatorType.EQUAL)
-        self.assertEqual(rule2.predicates[1].right_term.value, 4000)
+        self.assertEqual(rule2.predicates[1].right_term.value, 'medium')
 
         rule3 = rules[2]
         rule3.validate()
@@ -88,8 +88,8 @@ class TestDecisionTableToRuleset(unittest.TestCase):
         self.assertEqual(len(rule3.predicates), 2)
         self.assertEqual(rule3.predicates[0].operator, OperatorType.EQUAL)
         self.assertEqual(rule3.predicates[0].right_term.value, 40)
-        self.assertEqual(rule3.predicates[1].operator, OperatorType.EQUAL)
-        self.assertEqual(rule3.predicates[1].right_term.value, 5000)
+        self.assertEqual(rule3.predicates[1].operator, OperatorType.IS_IN)
+        self.assertEqual(rule3.predicates[1].right_term.value, ['high', 'very_high'])
 
     def test_pandas_to_rules_with_nan_values(self):
         data = {

@@ -100,10 +100,15 @@ def parse_node_value(value: str):
         match = re.match(pattern, str(value).strip())
         if match:
             parsed_value = match.group(1)
-            if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
-                parsed_value = [float(v.strip()) for v in parsed_value.split(",")]
+            if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.SUBSET, OperatorType.NOT_SUBSET, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
+                parsed_value = [
+                    bool(v.strip()) if v.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else
+                    float(v.strip()) if v.strip().replace('.', '', 1).isdigit() else
+                    v.strip()
+                    for v in parsed_value.split(",")
+                ]
             else:
-                parsed_value = float(parsed_value) if parsed_value.replace('.', '', 1).isdigit() else parsed_value
+                parsed_value = bool(parsed_value.strip()) if parsed_value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(parsed_value.strip()) if parsed_value.strip().replace('.', '', 1).isdigit() else parsed_value.strip()
             return operator, parsed_value
 
     # Default to EQUAL if no operator is found
