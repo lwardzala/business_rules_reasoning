@@ -1,6 +1,6 @@
 [project]
 name = "business_rules_reasoning"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{ name="Lukasz Wardzala <https://github.com/lwardzala>" }]
 description = "A Python-based logical reasoning system combining rule-based engines with Large Language Models (LLMs) for business automation. Supports deduction and hypothesis testing, partial fact completion, and automated fact retrieval via documents or chat. Features include explainable reasoning, workflow integration, and customizable knowledge bases. Designed for transparency, efficiency, and seamless integration into decision-making workflows."
 keywords = ["reasoning", "business rules", "infernce engine", "logical reasoning", "horn's inference", "llm inference", "llm"]

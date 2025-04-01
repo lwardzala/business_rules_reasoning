@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 from src.business_rules_reasoning.orchestrator.base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions, VariablesFetchingMode
@@ -66,6 +67,65 @@ class TestBaseOrchestratorMethods(unittest.TestCase):
         self.orchestrator._set_variables(variables_dict)
         self.orchestrator._continue_reasoning()
         self.assertEqual(self.orchestrator.reasoning_process.state, ReasoningState.FINISHED)
+
+    def test_return_inference_results_with_full_context(self):
+        response = "Test response"
+        self.orchestrator.inference_session_id = "test_session_id"
+        self.orchestrator.reasoning_process = ReasoningProcess(
+            reasoning_method=ReasoningMethod.DEDUCTION,
+            knowledge_base=KnowledgeBase(id="kb1", name="KB1", description="Test KB", reasoning_type=ReasoningType.CRISP),
+        )
+        self.orchestrator.reasoning_process.reasoned_items = [
+            Variable(id="var1", value="value1"),
+            Variable(id="var2", value="value2")
+        ]
+        self.orchestrator.reasoning_process.state = ReasoningState.FINISHED
+        self.orchestrator.reasoning_process.evaluation_message = EvaluationMessage.PASSED
+        self.orchestrator.inference_logger.log("Test log entry")
+        self.orchestrator.status = OrchestratorStatus.INFERENCE_FINISHED
+        result = self.orchestrator._return_inference_results(response, return_full_context=True)
+
+        # Assert inference session ID
+        self.assertEqual(result["inference_session_id"], "test_session_id")
+
+        # Assert response
+        self.assertEqual(result["response"], response)
+
+        # Assert reasoning process details
+        self.assertIn("reasoning_process", result)
+        reasoning_process = result["reasoning_process"]
+        self.assertIn("state", reasoning_process)
+        self.assertEqual(reasoning_process["state"], ReasoningState.FINISHED.name)
+        self.assertIn("evaluation_message", reasoning_process)
+        self.assertEqual(reasoning_process["evaluation_message"], EvaluationMessage.PASSED.name)
+        self.assertIn("reasoned_items", reasoning_process)
+        self.assertEqual(len(reasoning_process["reasoned_items"]), 2)
+        self.assertEqual(reasoning_process["reasoned_items"][0]["id"], "var1")
+        self.assertEqual(reasoning_process["reasoned_items"][0]["value"], "value1")
+        self.assertEqual(reasoning_process["reasoned_items"][1]["id"], "var2")
+        self.assertEqual(reasoning_process["reasoned_items"][1]["value"], "value2")
+
+        # Assert inference log
+        self.assertIn("inference_log", result)
+        self.assertEqual(result["inference_log"], ["Test log entry"])
+
+        # Assert orchestrator status
+        self.assertIn("orchestrator_status", result)
+        self.assertEqual(result["orchestrator_status"], OrchestratorStatus.INFERENCE_FINISHED.name)
+
+        # Assert orchestrator options
+        self.assertIn("orchestrator_options", result)
+        options = result["orchestrator_options"]
+        self.assertEqual(options["variables_fetching"], self.orchestrator.options.variables_fetching.name)
+        self.assertEqual(options["conclusion_as_fact"], self.orchestrator.options.conclusion_as_fact)
+        self.assertEqual(options["pass_conclusions_as_arguments"], self.orchestrator.options.pass_conclusions_as_arguments)
+        self.assertEqual(options["pass_facts_as_arguments"], self.orchestrator.options.pass_facts_as_arguments)
+
+    def test_return_inference_results_without_full_context(self):
+        response = "Test response"
+        result = self.orchestrator._return_inference_results(response, return_full_context=False)
+
+        self.assertEqual(result, response)
 
 class TestBaseOrchestratorOptions(unittest.TestCase):
     def test_default_options(self):

@@ -17,6 +17,14 @@ class DeductiveReasoningService(ReasoningService):
     def continue_reasoning(reasoning_process: ReasoningProcess) -> ReasoningProcess:
         reasoning_process.knowledge_base.validate()
 
+        # Sort rules: prioritize rules with fewer predicates and no missing left terms
+        reasoning_process.knowledge_base.rule_set.sort(
+            key=lambda rule: (
+                any(predicate.left_term.is_empty() for predicate in rule.predicates),  # Rules with missing left terms last
+                len(rule.predicates)  # Rules with fewer predicates first
+            )
+        )
+
         if reasoning_process.reasoning_method == ReasoningMethod.DEDUCTION:
             return DeductiveReasoningService.deduction(reasoning_process)
         elif reasoning_process.reasoning_method == ReasoningMethod.HYPOTHESIS_TESTING:

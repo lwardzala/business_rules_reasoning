@@ -5,7 +5,7 @@ This library provides classes and methods for defining and evaluating business r
 """
 
 __title__ = "business_rules_reasoning"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Lukasz Wardzala <https://github.com/lwardzala>"
 __license__ = "MIT"
 

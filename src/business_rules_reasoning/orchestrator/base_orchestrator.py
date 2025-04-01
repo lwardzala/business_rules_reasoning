@@ -147,6 +147,13 @@ class BaseOrchestrator(ABC):
         return {
             "inference_session_id": self.inference_session_id,
             "response": response,
-            "reasoning_process": serialize_reasoning_process(self.reasoning_process),
-            "inference_log": self.inference_logger.get_log()
+            "reasoning_process": json.loads(serialize_reasoning_process(self.reasoning_process)),
+            "inference_log": self.inference_logger.get_log(),
+            "orchestrator_status": self.status.name,
+            "orchestrator_options": {
+                "variables_fetching": self.options.variables_fetching.name,
+                "conclusion_as_fact": self.options.conclusion_as_fact,
+                "pass_conclusions_as_arguments": self.options.pass_conclusions_as_arguments,
+                "pass_facts_as_arguments": self.options.pass_facts_as_arguments
+            }
         } if return_full_context else response
