@@ -1,8 +1,9 @@
 import json
+
 from .base.reasoning_process import ReasoningProcess
 from .base.knowledge_base import KnowledgeBase
 from .base.rule import Rule
-from .deductive import DeductivePredicate
+from .deductive import DeductivePredicate, DeductiveConclusion
 from .base.variable import Variable
 from .base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod
 from .base import OperatorType
@@ -42,6 +43,10 @@ class ReasoningProcessEncoder(json.JSONEncoder):
                 "operator": obj.operator.name,
                 "result": obj.result,
                 "evaluated": obj.evaluated
+            }
+        elif isinstance(obj, DeductiveConclusion):
+            return {
+                "variable": obj.variable,
             }
         elif isinstance(obj, Variable):
             return {

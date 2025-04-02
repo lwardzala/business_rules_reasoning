@@ -45,7 +45,7 @@ class TestHuggingFaceOrchestrator(unittest.TestCase):
         self.assertEqual(variables_dict["var2"], True)
 
     def test_set_reasoning_process(self):
-        knowledge_base = KnowledgeBase(id="kb1", name="KBbb1", description="Test KB")
+        knowledge_base = KnowledgeBase(id="kb1", name="KBbb1", description="Test KB", reasoning_type=ReasoningType.CRISP)
         self.orchestrator.knowledge_bases = [knowledge_base]
         result = self.orchestrator._set_reasoning_process("kb1", ReasoningMethod.DEDUCTION, {})
         self.assertTrue(result)

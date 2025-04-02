@@ -306,20 +306,100 @@ INSERT INTO test_datasets (
 )
 VALUES (
     NULL,
-    'quesrtion?',
+    "
+    The P/E ratio is 14, indicating it may be undervalued relative to its earnings potential.
+    Sentiment analysis on recent news and earnings reports shows a positive outlook.
+    The stock's volatility is 0.2, suggesting a stable price movement and lower risk.
+    The company has reported consistent revenue growth over the past four quarters.
+
+    What should we do with the stock?
+    ",
     NULL,
     ARRAY(
         'action = BUY'
+    ),
+    'We should buy the stocks.',
+    ARRAY(
+        STRUCT('knowledge_base_id', "
+            stock_decision_rules - buy/sell stock decisions based on a report:
+            (pe_ratio_condition < 15.0 ∧ sentiment_condition IN ['positive', 'neutral'] ∧ volatility_condition <= 0.2) → action = BUY
+            (pe_ratio_condition BETWEEN [15, 25] ∧ sentiment_condition IN ['positive'] ∧ volatility_condition <= 0.3) → action = HOLD
+            (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
+        "),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    NULL,
+    "
+    The P/E ratio is 20, indicating the stock is fairly valued.
+    Sentiment analysis reflects generally positive sentiment, but not strong enough to justify aggressive action.
+    Volatility is moderate (up to 0.3), implying a balance of risk and potential reward.
+    The company has met earnings expectations but has not significantly outperformed.
+    No major changes in insider or institutional holdings.
+
+    Should we hold the stock?
+    ",
+    NULL,
+    ARRAY(
+        'action = HOLD'
     ),
     'Yes.',
     ARRAY(
         STRUCT('knowledge_base_id', "
             stock_decision_rules - buy/sell stock decisions based on a report:
             (pe_ratio_condition < 15.0 ∧ sentiment_condition IN ['positive', 'neutral'] ∧ volatility_condition <= 0.2) → action = BUY
-            (pe_ratio_condition >= 15 AND <=25 ∧ sentiment_condition IN ['positive'] ∧ volatility_condition <= 0.3) → action = HOLD
+            (pe_ratio_condition BETWEEN [15, 25] ∧ sentiment_condition IN ['positive'] ∧ volatility_condition <= 0.3) → action = HOLD
             (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
-            (pe_ratio_condition = is_not_null ∧ sentiment_condition IN ['negative'] ∧ volatility_condition = any) → action = SELL
-            (pe_ratio_condition = any ∧ sentiment_condition = any ∧ volatility_condition = any) → action = HOLD
+        "),
+        STRUCT('reasoning_method', 'HYPOTHESIS_TESTING'),
+        STRUCT('reasoning_hypothesis', 'action = HOLD')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    NULL,
+    "
+    The P/E ratio is 26, suggesting the stock might be overvalued.
+    Sentiment analysis indicates negative public or investor sentiment, possibly due to poor earnings or guidance.
+    The stock's volatility is high 0.4, reflecting increased risk.
+    The company has missed earnings estimates in multiple quarters.
+
+    What should we do with the stock?
+    ",
+    NULL,
+    ARRAY(
+        'action = SELL'
+    ),
+    'Sell the stock.',
+    ARRAY(
+        STRUCT('knowledge_base_id', "
+            stock_decision_rules - buy/sell stock decisions based on a report:
+            (pe_ratio_condition < 15.0 ∧ sentiment_condition IN ['positive', 'neutral'] ∧ volatility_condition <= 0.2) → action = BUY
+            (pe_ratio_condition BETWEEN [15, 25] ∧ sentiment_condition IN ['positive'] ∧ volatility_condition <= 0.3) → action = HOLD
+            (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
         "),
         STRUCT('reasoning_method', 'DEDUCTION'),
         STRUCT('reasoning_hypothesis', 'None')

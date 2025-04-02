@@ -22,7 +22,7 @@ INSERT INTO leasing_document_decision_table VALUES
     (NULL, NULL, NULL, NULL, NULL, 'False', 'False', NULL, True);
 
 CREATE OR REPLACE TABLE stock_decision_rules (
-  pe_ratio_condition STRING COMMENT "Conditions on P/E ratio like <15, >25, etc.",
+  pe_ratio_condition STRING COMMENT "Numeric P/E ratio like 15, 25, etc.",
   sentiment_condition STRING COMMENT "Sentiment analysis result: positive, negative, etc.",
   volatility_condition STRING COMMENT "Stock price volatility rules",
   `action` STRING COMMENT "Final decision: BUY, SELL, HOLD"
@@ -31,7 +31,5 @@ COMMENT "buy/sell stock decisions based on a report";
 
 INSERT INTO stock_decision_rules VALUES
   ('<15', 'is_in(positive, neutral)', '<=0.2', 'BUY'),
-  ('>=15 AND <=25', 'is_in(positive)', '<=0.3', 'HOLD'),
-  ('>25', 'is_in(negative)', '>0.3', 'SELL'),
-  ('is_not_null', 'is_in(negative)', 'any', 'SELL'),
-  ('any', 'any', 'any', 'HOLD');
+  ('between(15, 25)', 'is_in(positive)', '<=0.3', 'HOLD'),
+  ('>25', 'is_in(negative)', '>0.3', 'SELL');

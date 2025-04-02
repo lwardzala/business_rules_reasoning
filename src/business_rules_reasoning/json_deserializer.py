@@ -2,7 +2,7 @@ import json
 from .base.reasoning_process import ReasoningProcess
 from .base.knowledge_base import KnowledgeBase
 from .base.rule import Rule
-from .deductive import DeductivePredicate
+from .deductive import DeductivePredicate, DeductiveConclusion
 from .base.variable import Variable
 from .base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 from .base import OperatorType
@@ -32,7 +32,7 @@ def deserialize_knowledge_base(data: str) -> KnowledgeBase:
 def deserialize_rule(data: str) -> Rule:
     data_dict = json.loads(data)
     rule = Rule()
-    rule.conclusion = deserialize_predicate(json.dumps(data_dict["conclusion"]))
+    rule.conclusion = deserialize_conclusion(json.dumps(data_dict["conclusion"]))
     rule.predicates = [deserialize_predicate(json.dumps(predicate)) for predicate in data_dict["predicates"]]
     rule.result = data_dict["result"]
     rule.evaluated = data_dict["evaluated"]
@@ -47,6 +47,11 @@ def deserialize_predicate(data: str) -> DeductivePredicate:
     predicate.result = data_dict["result"]
     predicate.evaluated = data_dict["evaluated"]
     return predicate
+
+def deserialize_conclusion(data: str) -> DeductiveConclusion:
+    data_dict = json.loads(data)
+    conclusion = DeductiveConclusion(deserialize_variable(json.dumps(data_dict["variable"])))
+    return conclusion
 
 def deserialize_variable(data: str) -> Variable:
     data_dict = json.loads(data)

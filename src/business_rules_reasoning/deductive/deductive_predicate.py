@@ -14,7 +14,8 @@ class DeductivePredicate(Predicate):
     def evaluate(self):
         if not self.is_ready():
             raise Exception(f"[Inference Engine]: Evaluation of predicate has failed. Missing value {self.left_term.id}.")
-        if self.left_term.get_value_type() != self.right_term.get_value_type():
+        # TODO: precise type check
+        if (self.left_term.get_value_type() != self.right_term.get_value_type()) and self.right_term.get_value_type() != 'list':
             raise Exception(f"[Inference Engine]: Variable {self.right_term.id}: Type mismatch between left term value ({self.left_term.get_value_type()}) and right term value ({self.right_term.get_value_type()}).")
         
         if self.evaluated:

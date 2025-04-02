@@ -203,6 +203,7 @@ class LLMOrchestrator(BaseOrchestrator):
             if knowledge_base:
                 self.reasoning_process = ReasoningProcess(reasoning_method=reasoning_method, knowledge_base=knowledge_base, options=reasoning_options)
                 self._log_inference(f"[Orchestrator]: Reasoning process was set with method: {reasoning_method.name} and knowledge base: {knowledge_base_id}")
+                self._reset_engine()
                 return True
         return False
     

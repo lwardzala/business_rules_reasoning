@@ -100,6 +100,14 @@ class BaseOrchestrator(ABC):
         if self.reasoning_process.state == ReasoningState.FINISHED:
             self.reset_orchestration() # TODO: think about: start new orchestration or stay in finished state?
         return
+    
+    def _reset_engine(self):
+        if self.reasoning_process is None:
+            raise ValueError("Reasoning process is not initialized. Cannot reset the engine.")
+        
+        service = self.get_reasoning_service()
+        self.reasoning_process = service.clear_reasoning(self.reasoning_process)
+        self._log_inference(f"[Engine]: Reasoning process was cleared. Status: {self.reasoning_process.state}")
 
     def get_reasoning_service(self) -> ReasoningService:
         if self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.CRISP:

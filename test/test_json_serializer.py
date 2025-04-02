@@ -1,7 +1,7 @@
 import unittest
 from src.business_rules_reasoning.json_serializer import serialize_reasoning_process, serialize_knowledge_base
 from src.business_rules_reasoning.base import ReasoningProcess, KnowledgeBase, Rule, Variable, OperatorType
-from src.business_rules_reasoning.deductive import DeductivePredicate
+from src.business_rules_reasoning.deductive import DeductivePredicate, DeductiveConclusion
 from src.business_rules_reasoning.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 
 class TestJsonSerializer(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestJsonSerializer(unittest.TestCase):
         adult_predicate = DeductivePredicate(left_term=age_variable, right_term=Variable(value=20), operator=OperatorType.GREATER_OR_EQUAL)
 
         # Create rules
-        adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
+        adult_rule = Rule(conclusion=DeductiveConclusion(Variable('conclusion', '', 20)), predicates=[adult_predicate])
 
         # Create knowledge base
         knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
@@ -24,6 +24,7 @@ class TestJsonSerializer(unittest.TestCase):
         reasoning_process.state = ReasoningState.INITIALIZED
         reasoning_process.reasoned_items = []
         reasoning_process.evaluation_message = EvaluationMessage.NONE
+        reasoning_process.options = {"hypothesis": Variable(id="hypothesis", name="Hypothesis", value=True)}
 
         # Serialize reasoning process
         serialized = serialize_reasoning_process(reasoning_process)
@@ -40,7 +41,7 @@ class TestJsonSerializer(unittest.TestCase):
         adult_predicate = DeductivePredicate(left_term=age_variable, right_term=Variable(value=20), operator=OperatorType.GREATER_OR_EQUAL)
 
         # Create rules
-        adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
+        adult_rule = Rule(conclusion=DeductiveConclusion(Variable('conclusion', '', 20)), predicates=[adult_predicate])
 
         # Create knowledge base
         knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
