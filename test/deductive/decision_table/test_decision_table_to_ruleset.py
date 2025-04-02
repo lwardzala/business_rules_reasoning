@@ -8,7 +8,7 @@ class TestDecisionTableToRuleset(unittest.TestCase):
         self.data = {
             "age": ["<18", ">=18", "between(30,40)"],
             "income": [">5000", "<=5000", "is_in(3000,4000,5000)"],
-            "loan_approved": [False, True, True]
+            "loan_approved": ['False', 'True', 'True']
         }
         self.df = pd.DataFrame(self.data)
 

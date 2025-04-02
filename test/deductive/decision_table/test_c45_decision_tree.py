@@ -118,7 +118,7 @@ class TestC45Ruleset(unittest.TestCase):
         rule1.validate()
         self.assertEqual(rule1.conclusion.variable.id, "conclusion1")
         self.assertEqual(rule1.conclusion.variable.name, "Conclusion 1 Description")
-        self.assertEqual(rule1.conclusion.variable.value, "Yes")
+        self.assertEqual(rule1.conclusion.variable.value, True)
         self.assertEqual(len(rule1.predicates), 1)
         self.assertEqual(rule1.predicates[0].operator, OperatorType.EQUAL)
         self.assertEqual(rule1.predicates[0].right_term.value, "X")

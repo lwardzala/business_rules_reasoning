@@ -11,6 +11,12 @@ def to_snake_case(name: str) -> str:
         re.sub('([A-Z]+)', r' \1',
         name.replace('-', ' '))).split()).lower()
 
+def parse_value(value):
+    if isinstance(value, str):
+        return value.strip().lower() in ['true', '1', 'yes'] if value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(value.strip()) if value.strip().replace('.', '', 1).isdigit() else value.strip()
+    
+    return value
+
 def parse_cell_value(cell_value: str):
     """
     Parse a cell value to extract the operator and value.
@@ -37,17 +43,17 @@ def parse_cell_value(cell_value: str):
             value = match.group(1)
             if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.SUBSET, OperatorType.NOT_SUBSET, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
                 value = [
-                    bool(v.strip()) if v.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else
-                    float(v.strip()) if v.strip().replace('.', '', 1).isdigit() else
-                    v.strip()
+                    parse_value(v) #v.strip().lower() in ['true', '1', 'yes'] if v.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else
+                    #float(v.strip()) if v.strip().replace('.', '', 1).isdigit() else
+                    #v.strip()
                     for v in value.split(",")
                 ]
             else:
-                value = bool(value.strip()) if value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(value.strip()) if value.strip().replace('.', '', 1).isdigit() else value.strip()
+                value = parse_value(value) #value.strip().lower() in ['true', '1', 'yes'] if value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(value.strip()) if value.strip().replace('.', '', 1).isdigit() else value.strip()
             return operator, value
 
     # Default to EQUAL if no operator is found
-    return OperatorType.EQUAL, cell_value
+    return OperatorType.EQUAL, parse_value(cell_value)
 
 def pandas_to_rules(dataframe: pd.DataFrame, conclusion_index: int | List[int] = -1, features_description: dict = None) -> List[Rule]:
     """
@@ -83,6 +89,7 @@ def pandas_to_rules(dataframe: pd.DataFrame, conclusion_index: int | List[int] =
         conclusion_value = row[headers[conclusion_index]]
         if pd.isna(conclusion_value):
             continue
+        conclusion_value = parse_value(conclusion_value)
         conclusion_variable = VariableBuilder().set_id(conclusion_column).set_name(conclusion_name).set_value(conclusion_value).unwrap()
         rule_builder.set_conclusion(conclusion_variable)
 

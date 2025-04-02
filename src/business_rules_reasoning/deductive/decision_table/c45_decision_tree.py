@@ -76,6 +76,12 @@ def c45_decision_tree(dataframe: pd.DataFrame, conclusion_index: int = -1) -> Di
 
     return build_tree(dataframe, attributes, target)
 
+def parse_value(value):
+    if isinstance(value, str):
+        return value.strip().lower() in ['true', '1', 'yes'] if value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(value.strip()) if value.strip().replace('.', '', 1).isdigit() else value.strip()
+    
+    return value
+
 def parse_node_value(value: str):
     """
     Parse a node value to extract the operator and right term.
@@ -102,17 +108,15 @@ def parse_node_value(value: str):
             parsed_value = match.group(1)
             if operator in [OperatorType.IS_IN, OperatorType.NOT_IN, OperatorType.SUBSET, OperatorType.NOT_SUBSET, OperatorType.BETWEEN, OperatorType.NOT_BETWEEN]:
                 parsed_value = [
-                    bool(v.strip()) if v.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else
-                    float(v.strip()) if v.strip().replace('.', '', 1).isdigit() else
-                    v.strip()
+                    parse_value(v)
                     for v in parsed_value.split(",")
                 ]
             else:
-                parsed_value = bool(parsed_value.strip()) if parsed_value.strip().lower() in ["true", "false", '1', '0', 'yes', 'no'] else float(parsed_value.strip()) if parsed_value.strip().replace('.', '', 1).isdigit() else parsed_value.strip()
+                parsed_value = parse_value(parsed_value)
             return operator, parsed_value
 
     # Default to EQUAL if no operator is found
-    return OperatorType.EQUAL, value
+    return OperatorType.EQUAL, parse_value(value)
 
 def to_snake_case(name: str) -> str:
     return '_'.join(
@@ -144,7 +148,7 @@ def tree_to_rules(tree: dict, target: str, path: list, features_description: dic
 
         conclusion_name = features_description.get(target, None) if features_description else None
 
-        conclusion_variable = VariableBuilder().set_id(target_snake_case).set_name(conclusion_name).set_value(tree).unwrap()
+        conclusion_variable = VariableBuilder().set_id(target_snake_case).set_name(conclusion_name).set_value(parse_value(tree)).unwrap()
         rule_builder.set_conclusion(conclusion_variable)
         rules.append(rule_builder.unwrap())
         return rules
@@ -165,7 +169,7 @@ def tree_to_rules(tree: dict, target: str, path: list, features_description: dic
                 rule_builder.add_predicate(predicate)
             
             conclusion_name = features_description.get(target, None) if features_description else None
-            conclusion_variable = VariableBuilder().set_id(target_snake_case).set_name(conclusion_name).set_value(value).unwrap()
+            conclusion_variable = VariableBuilder().set_id(target_snake_case).set_name(conclusion_name).set_value(parse_value(value)).unwrap()
             rule_builder.set_conclusion(conclusion_variable)
             rules.append(rule_builder.unwrap())
 
