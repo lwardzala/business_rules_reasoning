@@ -2,20 +2,17 @@ from typing import Callable, List, Dict, Tuple, Any
 import json
 
 from ...utils import retry, parse_variable_value, extract_json_from_response
-from ...base import ReasoningState, ReasoningProcess, ReasoningService, ReasoningMethod, Variable
+from ...base import ReasoningProcess, ReasoningMethod, Variable
 from ..reasoning_action import ReasoningAction
 from ..variable_source import VariableSource
-from ..inference_logger import InferenceLogger
 from ..base_orchestrator import BaseOrchestrator, OrchestratorStatus, OrchestratorOptions, VariablesFetchingMode
-from .prompt_templates import PromptTemplates
 from .llm_pipeline_base import LLMPipelineBase
 
 class LLMOrchestrator(BaseOrchestrator):
-    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, prompt_templates = PromptTemplates, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), **kwargs):
+    def __init__(self, knowledge_base_retriever: Callable, inference_state_retriever: Callable, llm: LLMPipelineBase, inference_session_id: str = None, actions: List[ReasoningAction] = None, variable_sources: List[VariableSource] = None, agent_type: str = "reasoning agent", retry_policy: int = 3, options: OrchestratorOptions = OrchestratorOptions(), **kwargs):
         super().__init__(knowledge_base_retriever, inference_state_retriever, options, inference_session_id, actions, variable_sources)
         self.llm = llm
         self.query_log: List[Dict[str, str]] = []
-        self.prompt_templates = prompt_templates
         self.agent_type: str = agent_type
         self.retry_policy = retry_policy
 
@@ -139,7 +136,7 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _fetch_inference_instructions(self, text: str) -> Tuple[str, ReasoningMethod]:
         knowledge_bases_info = "\n".join([f"{kb.id} - {kb.description}" for kb in self.knowledge_bases])
-        prompt = self.prompt_templates.FetchInferenceInstructionsTemplate.format(knowledge_bases=knowledge_bases_info, text=text)
+        prompt = self.llm.templates.FetchInferenceInstructionsTemplate.format(knowledge_bases=knowledge_bases_info, text=text)
         self._log_inference(f"[Orchestrator]: Prompting for inference instructions...")
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
@@ -156,7 +153,7 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _fetch_variables(self, text: str, variables: List[Variable]) -> Dict[str, Any]:
         variables_info = "\n".join([f"{var.id} - {var.name}" for var in variables])
-        prompt = self.prompt_templates.FetchVariablesTemplate.format(variables=variables_info, text=text)
+        prompt = self.llm.templates.FetchVariablesTemplate.format(variables=variables_info, text=text)
         self._log_inference(f"[Orchestrator]: Prompting for variables...")
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
@@ -179,7 +176,7 @@ class LLMOrchestrator(BaseOrchestrator):
         missing_variables_text = "\n".join([f"{var.id} - {var.name}" for var in variables])
 
         # context = "\n".join([f"{entry['role']}: {entry['text']}" for entry in self.query_log if entry['role'] in ['user', 'agent']])
-        prompt = self.prompt_templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=missing_variables_text)
+        prompt = self.llm.templates.AskForMoreInformationTemplate.format(agent_type=self.agent_type, variables=missing_variables_text)
         self._log_inference(f"[Orchestrator]: Prompting to ask for more information about: {', '.join(var.id for var in variables)} ...")
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
@@ -190,7 +187,7 @@ class LLMOrchestrator(BaseOrchestrator):
     def _ask_for_reasoning_clarification(self) -> str:
         knowledge_bases_info = "\n".join([f"{kb.name} - {kb.description}" for kb in self.knowledge_bases])
         self._log_inference(f"[Orchestrator]: Prompting for reasoning clarification...")
-        prompt = self.prompt_templates.AskForReasoningClarificationTemplate.format(agent_type=self.agent_type, knowledge_bases=knowledge_bases_info)
+        prompt = self.llm.templates.AskForReasoningClarificationTemplate.format(agent_type=self.agent_type, knowledge_bases=knowledge_bases_info)
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
         self._log_query(response, "system")
@@ -219,7 +216,7 @@ class LLMOrchestrator(BaseOrchestrator):
         else:
             conclusions = "\n".join([f"- {item.display()}" for item in self.reasoning_process.reasoned_items])
         context = "\n".join([entry['text'] for entry in self.query_log if entry['role'] == 'user'])
-        prompt = self.prompt_templates.FinishInferenceTemplate.format(agent_type=self.agent_type, conclusions=conclusions, context=context)
+        prompt = self.llm.templates.FinishInferenceTemplate.format(agent_type=self.agent_type, conclusions=conclusions, context=context)
         self._log_inference(f"[Orchestrator]: Prompting for answer generation...")
         self._log_query(prompt, "engine")
         response = self.llm.prompt_text_generation(prompt)
@@ -228,10 +225,19 @@ class LLMOrchestrator(BaseOrchestrator):
 
     def _fetch_hypothesis_conclusion(self, text: str, knowledge_base_id: str) -> Variable:
         knowledge_base_rules = next((kb.rule_set for kb in self.knowledge_bases if kb.id == knowledge_base_id), None)
-        conclusions_info = "\n".join([f"{rule.conclusion.get_variable().id} - {rule.conclusion.get_variable().name}" for rule in knowledge_base_rules])
-        conclusions = [rule.conclusion.get_variable() for rule in knowledge_base_rules]
+        
+        seen_ids = set()
+        rules = []
+        for rule in knowledge_base_rules:
+            rule_id = rule.conclusion.get_id()
+            if rule_id not in seen_ids:
+                seen_ids.add(rule_id)
+                rules.append(rule)
 
-        prompt = self.prompt_templates.FetchHypothesisTestingTemplate.format(conclusions=conclusions_info, text=text)
+        conclusions_info = "\n".join([f"{rule.conclusion.get_variable().id} - {rule.conclusion.get_variable().name}" for rule in rules])
+        conclusions = [rule.conclusion.get_variable() for rule in rules]
+
+        prompt = self.llm.templates.FetchHypothesisTestingTemplate.format(conclusions=conclusions_info, text=text)
         self._log_inference(f"[Orchestrator]: Prompting for hypothesis from available conclusions...")
         self._log_query(prompt, "engine")
 

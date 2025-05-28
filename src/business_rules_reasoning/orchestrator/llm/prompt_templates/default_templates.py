@@ -1,5 +1,6 @@
+from .base_prompt_templates import BasePromptTemplates
 
-class PromptTemplates:
+class DefaultPromptTemplates(BasePromptTemplates):
     FetchInferenceInstructionsTemplate = (
         "You are an expert in factual retrieval, specializing in extracting accurate information from designated knowledge bases.\n"
         "You must only provide facts from the specified query and refrain from making assumptions or speculations.\n\n"
@@ -9,18 +10,21 @@ class PromptTemplates:
         "2. If a suitable knowledge base exists, output its ID in JSON format within curly brackets. Use the key 'knowledge_base_id'.\n"
         "3. Use the key 'reasoning_method' in JSON:\n"
         "   - Set 'hypothesis_testing' if the query requests a specific decision.\n"
-        "   - Set 'deduction' if the query explicitly asks for full reasoning or logical deduction.\n"
-        "4. Your response must follow this format:\n"
-        "   - Begin your answer after the word 'Answer:'.\n"
-        "   - If a fact cannot be found, do not fabricate or provide an answer.\n\n"
+        "   - Set 'deduction' if the query explicitly asks for full reasoning or logical deduction.\n\n"
+
+        "Important:\n"
+        "- Do not guess or fabricate answers.\n"
+        "- Do not explain your reasoning outside the JSON object.\n"
+        "- Begin your response **immediately after** the word 'Answer:'.\n\n"
         
         "Knowledge bases are listed in the following format:\n"
         "<knowledge_base_id> - <knowledge_base_description>\n\n"
         
         "Available knowledge bases:\n"
-        "{knowledge_bases}\n\n"
+        "{knowledge_bases}\n"
+        "null - the question is irrelevant.\n\n"
         
-        "Given query: '{text}'\n\n"
+        "'{text}'\n\n"
         
         "Which knowledge base should be used? Only provide the knowledge base ID in JSON format.\n\n"
         
@@ -34,8 +38,12 @@ class PromptTemplates:
         "Instructions:\n"
         "1. Select only one the most appropriate hypothesis from the provided list based on the query.\n"
         "2. Identify the corresponding hypothesis value that should be tested.\n"
-        "3. Output the hypothesis information in JSON format with the keys 'hypothesis_id' and 'hypothesis_value'.\n"
-        "4. Your response must begin after the word 'Answer:'.\n\n"
+        "3. Output the hypothesis information in JSON format with the keys 'hypothesis_id' and 'hypothesis_value'.\n\n"
+
+        "Important:\n"
+        "- Do not guess or fabricate answers.\n"
+        "- Do not explain your reasoning outside the JSON object.\n"
+        "- Begin your response **immediately after** the word 'Answer:'.\n\n"
 
         "The available hypotheses are listed in the following format:\n"
         "<hypothesis_name> - <hypothesis_description>\n\n"
@@ -43,7 +51,7 @@ class PromptTemplates:
         "Possible hypotheses:\n"
         "{conclusions}\n\n"
 
-        "Given query: '{text}'\n\n"
+        "'{text}'\n\n"
 
         "Which hypothesis should be tested? You are allowed to answer only with the hypothesis ID and its corresponding hypothesis value that best match the user’s query.\n\n"
 
@@ -57,8 +65,12 @@ class PromptTemplates:
         "1. Extract values **only from the given query** for the listed required facts.\n"
         "2. If a fact is missing in the query, return its value as **null**.\n"
         "3. Do **not** provide any additional facts beyond the required ones.\n"
-        "4. Format your response in JSON inside curly brackets, where **fact_id** is the key and its extracted value is the corresponding value.\n"
-        "5. Your response must begin after the word **'Answer:'**.\n\n"
+        "4. Format your response in JSON inside curly brackets, where **fact_id** is the key and its extracted value is the corresponding value.\n\n"
+
+        "Important:\n"
+        "- Do not guess or fabricate answers.\n"
+        "- Do not explain your reasoning outside the JSON object.\n"
+        "- Begin your response **immediately after** the word 'Answer:'.\n\n"
 
         "The required facts are listed in the following format:\n"
         "<fact_id> - <fact_description>\n\n"
@@ -66,7 +78,6 @@ class PromptTemplates:
         "Required facts:\n"
         "{variables}\n\n"
 
-        "Given query:\n"
         "'{text}'\n\n"
 
         "Extract only the specified facts from the query and return them in JSON format.\n\n"
@@ -78,7 +89,7 @@ class PromptTemplates:
         "Your task is to ask the user for any missing facts needed to complete the response.\n\n"
 
         "Instructions:\n"
-        "1. Identify which required facts are missing based on the provided context.\n"
+        "1. Ask to provide infomration only for the required facts.\n"
         "2. Formulate a clear, concise question to ask the user for those facts.\n"
         "3. Only ask about the missing required facts—do not request anything else.\n"
         "4. Output your question after the word 'Question:'.\n\n"
@@ -114,17 +125,22 @@ class PromptTemplates:
     )
     FinishInferenceTemplate = (
         "You are {agent_type}, and the reasoning process has been completed.\n"
-        "Your task is to provide the final answer based strictly on the reasoned conclusions and given context.\n\n"
+        "Your task is to provide the final answer based strictly on the reasoned conclusions.\n\n"
 
         "Instructions:\n"
-        "1. Deliver the final answer concisely, based on the provided conclusions and context.\n"
+        "1. Deliver the final answer concisely, based on the provided conclusions.\n"
         "2. Do **not** include any additional explanations or extra information.\n"
-        "3. Output the final answer **after the word 'Answer:'**.\n\n"
+        "3. You must answer in simple, declarative and present tenses.\n\n"
+
+        "Important:\n"
+        "- Do not guess or fabricate answers.\n"
+        "- Do not explain your reasoning.\n"
+        "- Begin your response **immediately after** the word 'Answer:'.\n\n"
 
         "Reasoned conclusions:\n"
         "{conclusions}\n\n"
 
-        "Provide a direct answer for all the conclusions.\n\n"
+        "Provide a direct answer for all the conclusions in form of a short sentence.\n\n"
 
         "Answer:\n"
     )

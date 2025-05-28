@@ -19,7 +19,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "loan_processing_accepted_with_verification_deductive",
     'Bank Screening Document
 
     Customer Information:
@@ -49,7 +49,7 @@ VALUES (
         'loan_accepted = True',
         'forward_to_bank_verification = True'
     ),
-    'The loan has been accepted and is moving forward to bank verification.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', '
             leasing_document_decision_table - Knowledge base for processing leasing documents:
@@ -63,7 +63,9 @@ VALUES (
             (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
         '),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = True, forward_to_bank_verification = True')
     ),
     NULL
 );
@@ -78,7 +80,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "loan_processing_accepted_deductive",
     'Bank Screening Document
 
     Customer Information:
@@ -107,7 +109,7 @@ VALUES (
     ARRAY(
         'loan_accepted = True'
     ),
-    'The loan has been accepted.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', '
             leasing_document_decision_table - Knowledge base for processing leasing documents:
@@ -121,7 +123,9 @@ VALUES (
             (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
         '),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = True')
     ),
     NULL
 );
@@ -136,7 +140,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "loan_processing_rejected_deductive",
     'Bank Screening Document
 
     Customer Information:
@@ -165,7 +169,7 @@ VALUES (
     ARRAY(
         'loan_accepted = False'
     ),
-    'The loan has not been accepted.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', '
             leasing_document_decision_table - Knowledge base for processing leasing documents:
@@ -179,7 +183,9 @@ VALUES (
             (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
         '),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = False')
     ),
     NULL
 );
@@ -194,7 +200,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "loan_processing_ask_salary_deductive",
     'Bank Screening Document
 
     Customer Information:
@@ -217,8 +223,8 @@ VALUES (
 
     Check the customer document for loan acceptance and check if is needed to forward to bank verification team',
     NULL,
-    ARRAY(),
-    'What is the month net salary?',
+    NULL,
+    'expected response: must ask what is the month net salary.',
     ARRAY(
         STRUCT('knowledge_base_id', '
             leasing_document_decision_table - Knowledge base for processing leasing documents:
@@ -232,7 +238,9 @@ VALUES (
             (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
         '),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'MISSING_VALUES'),
+        STRUCT('reasoned_items', '')
     ),
     NULL
 );
@@ -247,7 +255,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "loan_processing_rejected_hypothesis",
     'Bank Screening Document
 
     Customer Information:
@@ -276,7 +284,7 @@ VALUES (
     ARRAY(
         'loan_accepted = False'
     ),
-    'Yes.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', '
             leasing_document_decision_table - Knowledge base for processing leasing documents:
@@ -290,7 +298,9 @@ VALUES (
             (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
         '),
         STRUCT('reasoning_method', 'HYPOTHESIS_TESTING'),
-        STRUCT('reasoning_hypothesis', 'loan_accepted = False')
+        STRUCT('reasoning_hypothesis', 'loan_accepted = False'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = False')
     ),
     NULL
 );
@@ -305,7 +315,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "stock_analysis_buy_deductive",
     "
     The P/E ratio is 14, indicating it may be undervalued relative to its earnings potential.
     Sentiment analysis on recent news and earnings reports shows a positive outlook.
@@ -318,7 +328,7 @@ VALUES (
     ARRAY(
         'action = BUY'
     ),
-    'We should buy the stocks.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', "
             stock_decision_rules - buy/sell stock decisions based on a report:
@@ -327,7 +337,9 @@ VALUES (
             (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
         "),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'action = BUY')
     ),
     NULL
 );
@@ -342,7 +354,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "stock_analysis_hold_hypothesis",
     "
     The P/E ratio is 20, indicating the stock is fairly valued.
     Sentiment analysis reflects generally positive sentiment, but not strong enough to justify aggressive action.
@@ -356,7 +368,7 @@ VALUES (
     ARRAY(
         'action = HOLD'
     ),
-    'Yes.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', "
             stock_decision_rules - buy/sell stock decisions based on a report:
@@ -365,7 +377,9 @@ VALUES (
             (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
         "),
         STRUCT('reasoning_method', 'HYPOTHESIS_TESTING'),
-        STRUCT('reasoning_hypothesis', 'action = HOLD')
+        STRUCT('reasoning_hypothesis', 'action = HOLD'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'action = HOLD')
     ),
     NULL
 );
@@ -380,7 +394,7 @@ INSERT INTO test_datasets (
     retrieved_context
 )
 VALUES (
-    NULL,
+    "stock_analysis_sell_deductive",
     "
     The P/E ratio is 26, suggesting the stock might be overvalued.
     Sentiment analysis indicates negative public or investor sentiment, possibly due to poor earnings or guidance.
@@ -393,7 +407,7 @@ VALUES (
     ARRAY(
         'action = SELL'
     ),
-    'Sell the stock.',
+    NULL,
     ARRAY(
         STRUCT('knowledge_base_id', "
             stock_decision_rules - buy/sell stock decisions based on a report:
@@ -402,7 +416,307 @@ VALUES (
             (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
         "),
         STRUCT('reasoning_method', 'DEDUCTION'),
-        STRUCT('reasoning_hypothesis', 'None')
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'action = SELL')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "stock_analysis_ask_more_deductive",
+    "
+    The P/E ratio is 26, suggesting the stock might be overvalued.
+    Sentiment analysis indicates negative public or investor sentiment, possibly due to poor earnings or guidance.
+
+    What should we do with the stock?
+    ",
+    NULL,
+    NULL,
+    "expected response: must ask what is the volatility condition.",
+    ARRAY(
+        STRUCT('knowledge_base_id', "
+            stock_decision_rules - buy/sell stock decisions based on a report:
+            (pe_ratio_condition < 15.0 ∧ sentiment_condition IN ['positive', 'neutral'] ∧ volatility_condition <= 0.2) → action = BUY
+            (pe_ratio_condition BETWEEN [15, 25] ∧ sentiment_condition IN ['positive'] ∧ volatility_condition <= 0.3) → action = HOLD
+            (pe_ratio_condition > 25.0 ∧ sentiment_condition IN ['negative'] ∧ volatility_condition > 0.3) → action = SELL
+        "),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'action = SELL')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "random_question_ask_more",
+    "
+    I don't know how to use iron. Is stainless steel heavy?
+    ",
+    NULL,
+    NULL,
+    "expected response: must askthe user to clarify what type of knowledge they are seeking",
+    ARRAY(),
+    NULL
+);
+
+----- AI generated tests
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "loan_processing_fraud_rejected",
+    'Bank Screening Document
+
+    Customer Information:
+    Name: Jane Smith
+    Customer ID: 987654321
+
+    Loan History (BKR Check):
+    Loans:
+    - Mortgage (Paid, closed)
+    Current Loan Status: No active loans
+
+    Fraud Database Check:
+    Status: Record found in internal fraud databases
+
+    Financial Information:
+    Monthly Net Salary: 4,000 EUR
+
+    Employment Type: Company Employee
+
+    30% Ruling Check:
+    No
+
+    Check the customer document for loan acceptance.',
+    NULL,
+    ARRAY(
+        'loan_accepted = False'
+    ),
+    NULL,
+    ARRAY(
+        STRUCT('knowledge_base_id', '
+            leasing_document_decision_table - Knowledge base for processing leasing documents:
+            (unpaid_loans = True) → loan_accepted = False
+            (fraud_database = True) → loan_accepted = False
+            (employment_type = unemployed) → loan_accepted = False
+            (monthly_net_salary < 2000) → loan_accepted = False
+            (employment_type != unemployed ∧ monthly_net_salary >= 2000 ∧ fraud_database = False ∧ unpaid_loans = False) → loan_accepted = True
+            (employment_type = freelancer) → forward_to_bank_verification = True
+            (thirty_percent_ruling = True) → forward_to_bank_verification = True
+            (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
+        '),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = False')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "loan_processing_unemployed_rejected",
+    'Bank Screening Document
+
+    Customer Information:
+    Name: Alex Brown
+    Customer ID: 555555555
+
+    Loan History (BKR Check):
+    Loans:
+    - None
+    Current Loan Status: No active loans
+
+    Fraud Database Check:
+    Status: No record found in internal fraud databases
+
+    Financial Information:
+    Monthly Net Salary: 2,500 EUR
+
+    Employment Type: Unemployed
+
+    30% Ruling Check:
+    No
+
+    Check the customer document for loan acceptance.',
+    NULL,
+    ARRAY(
+        'loan_accepted = False'
+    ),
+    NULL,
+    ARRAY(
+        STRUCT('knowledge_base_id', '
+            leasing_document_decision_table - Knowledge base for processing leasing documents:
+            (unpaid_loans = True) → loan_accepted = False
+            (fraud_database = True) → loan_accepted = False
+            (employment_type = unemployed) → loan_accepted = False
+            (monthly_net_salary < 2000) → loan_accepted = False
+            (employment_type != unemployed ∧ monthly_net_salary >= 2000 ∧ fraud_database = False ∧ unpaid_loans = False) → loan_accepted = True
+            (employment_type = freelancer) → forward_to_bank_verification = True
+            (thirty_percent_ruling = True) → forward_to_bank_verification = True
+            (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
+        '),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = False')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "loan_processing_30_percent_ruling_verification",
+    'Bank Screening Document
+
+    Customer Information:
+    Name: Maria Green
+    Customer ID: 222333444
+
+    Loan History (BKR Check):
+    Loans:
+    - Personal Loan (Paid, closed)
+    Current Loan Status: No active loans
+
+    Fraud Database Check:
+    Status: No record found in internal fraud databases
+
+    Financial Information:
+    Monthly Net Salary: 3,500 EUR
+
+    Employment Type: Company Employee
+
+    30% Ruling Check:
+    Yes
+
+    Check the customer document for loan acceptance and check if is needed to forward to bank verification team',
+    NULL,
+    ARRAY(
+        'loan_accepted = True',
+        'forward_to_bank_verification = True'
+    ),
+    NULL,
+    ARRAY(
+        STRUCT('knowledge_base_id', '
+            leasing_document_decision_table - Knowledge base for processing leasing documents:
+            (unpaid_loans = True) → loan_accepted = False
+            (fraud_database = True) → loan_accepted = False
+            (employment_type = unemployed) → loan_accepted = False
+            (monthly_net_salary < 2000) → loan_accepted = False
+            (employment_type != unemployed ∧ monthly_net_salary >= 2000 ∧ fraud_database = False ∧ unpaid_loans = False) → loan_accepted = True
+            (employment_type = freelancer) → forward_to_bank_verification = True
+            (thirty_percent_ruling = True) → forward_to_bank_verification = True
+            (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
+        '),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = True, forward_to_bank_verification = True')
+    ),
+    NULL
+);
+
+INSERT INTO test_datasets (
+    request_id,
+    request,
+    response,
+    expected_facts,
+    expected_response,
+    expected_retrieved_context,
+    retrieved_context
+)
+VALUES (
+    "loan_processing_no_history_verification",
+    'Bank Screening Document
+
+    Customer Information:
+    Name: Lisa White
+    Customer ID: 888999777
+
+    Loan History (BKR Check):
+    Loans:
+    - None
+    Current Loan Status: No active loans
+
+    Fraud Database Check:
+    Status: No record found in internal fraud databases
+
+    Financial Information:
+    Monthly Net Salary: 2,800 EUR
+
+    Employment Type: Company Employee
+
+    30% Ruling Check:
+    No
+
+    Previous Loans: No
+    Ongoing Loans: No
+
+    Check the customer document for loan acceptance and check if is needed to forward to bank verification team',
+    NULL,
+    ARRAY(
+        'loan_accepted = True',
+        'forward_to_bank_verification = True'
+    ),
+    NULL,
+    ARRAY(
+        STRUCT('knowledge_base_id', '
+            leasing_document_decision_table - Knowledge base for processing leasing documents:
+            (unpaid_loans = True) → loan_accepted = False
+            (fraud_database = True) → loan_accepted = False
+            (employment_type = unemployed) → loan_accepted = False
+            (monthly_net_salary < 2000) → loan_accepted = False
+            (employment_type != unemployed ∧ monthly_net_salary >= 2000 ∧ fraud_database = False ∧ unpaid_loans = False) → loan_accepted = True
+            (employment_type = freelancer) → forward_to_bank_verification = True
+            (thirty_percent_ruling = True) → forward_to_bank_verification = True
+            (previous_loans = False ∧ ongoing_loans = False) → forward_to_bank_verification = True
+        '),
+        STRUCT('reasoning_method', 'DEDUCTION'),
+        STRUCT('reasoning_hypothesis', 'None'),
+        STRUCT('engine_status', 'PASSED'),
+        STRUCT('reasoned_items', 'loan_accepted = True, forward_to_bank_verification = True')
     ),
     NULL
 );
