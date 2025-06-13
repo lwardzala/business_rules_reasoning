@@ -11,7 +11,7 @@ CREATE OR REPLACE TABLE leasing_document_decision_table (
 )
 COMMENT "Knowledge base for processing leasing documents";
 
-INSERT INTO leasing_document_decision_table VALUES
+INSERT INTO zenchef_datalake.test.leasing_document_decision_table VALUES
     ('True', NULL, NULL, NULL, NULL, NULL, NULL, False, NULL),
     (NULL, 'True', NULL, NULL, NULL, NULL, NULL, False, NULL),
     (NULL, NULL, 'unemployed', NULL, NULL, NULL, NULL, False, NULL),
@@ -24,12 +24,12 @@ INSERT INTO leasing_document_decision_table VALUES
 CREATE OR REPLACE TABLE stock_decision_rules (
   pe_ratio_condition STRING COMMENT "Numeric P/E ratio like 15, 25, etc.",
   sentiment_condition STRING COMMENT "Sentiment analysis result: positive, negative, etc.",
-  volatility_condition STRING COMMENT "Stock price volatility rules",
+  volatility_condition STRING COMMENT "Stock volatility rules",
   `action` STRING COMMENT "Final decision: BUY, SELL, HOLD"
 )
-COMMENT "buy/sell stock decisions based on a report";
+COMMENT "stock action decisions based on a report";
 
-INSERT INTO stock_decision_rules VALUES
+INSERT INTO zenchef_datalake.test.stock_decision_rules VALUES
   ('<15', 'is_in(positive, neutral)', '<=0.2', 'BUY'),
   ('between(15, 25)', 'is_in(positive)', '<=0.3', 'HOLD'),
   ('>25', 'is_in(negative)', '>0.3', 'SELL');
