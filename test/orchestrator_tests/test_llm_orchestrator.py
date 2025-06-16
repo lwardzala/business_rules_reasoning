@@ -4,7 +4,7 @@ from src.business_rules_reasoning.base import KnowledgeBase, ReasoningProcess, R
 from src.business_rules_reasoning.base.operator_enums import OperatorType
 from src.business_rules_reasoning.deductive import DeductivePredicate, DeductiveConclusion
 from src.business_rules_reasoning.orchestrator import OrchestratorStatus
-from src.business_rules_reasoning.orchestrator.llm import HuggingFacePipeline, LLMOrchestrator, PromptTemplates
+from src.business_rules_reasoning.orchestrator.llm import HuggingFacePipeline, LLMOrchestrator
 
 class TestHuggingFaceOrchestrator(unittest.TestCase):
     def setUp(self):
