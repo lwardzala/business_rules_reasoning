@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import List
 import re
+from typing import Union
 from ..knowledge_builder import RuleBuilder, PredicateBuilder, VariableBuilder
 from ...base.operator_enums import OperatorType
 from ...base.rule import Rule
@@ -55,7 +56,7 @@ def parse_cell_value(cell_value: str):
     # Default to EQUAL if no operator is found
     return OperatorType.EQUAL, parse_value(cell_value)
 
-def pandas_to_rules(dataframe: pd.DataFrame, conclusion_index: int | List[int] = -1, features_description: dict = None) -> List[Rule]:
+def pandas_to_rules(dataframe: pd.DataFrame, conclusion_index: Union[int, List[int]] = -1, features_description: dict = None) -> List[Rule]:
     """
     Convert a pandas DataFrame to a list of Rule objects.
 
