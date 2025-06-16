@@ -12,6 +12,10 @@ Turning even small models, such as those with just 3 billion parameters, into a 
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](License)
 
+<p align="center">
+  <img src="images/dependency_overview.png" alt="Solution" width="600"/>
+</p>
+
 ### Problem and Solution
 
 The **Business Rules Reasoning System** addresses the challenge of integrating logical reasoning capabilities into Large Language Models (LLMs). While LLMs are powerful tools for natural language understanding and generation, they lack inherent logical reasoning capabilities and often struggle with tasks requiring strict adherence to predefined rules or knowledge bases. This system bridges that gap by combining the structured reasoning of rule-based systems with the flexibility of LLMs. It enables transparent and explainable decision-making processes, making it suitable for business automation and other domains requiring logical consistency.
