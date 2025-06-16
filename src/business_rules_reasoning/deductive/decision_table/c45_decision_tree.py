@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from ..knowledge_builder import RuleBuilder, PredicateBuilder, VariableBuilder
 from ...base.operator_enums import OperatorType
@@ -175,7 +175,7 @@ def tree_to_rules(tree: dict, target: str, path: list, features_description: dic
 
     return rules
 
-def c45_ruleset(dataframe: pd.DataFrame, conclusion_index: int | List[int] = -1, features_description: dict = None) -> List[Rule]:
+def c45_ruleset(dataframe: pd.DataFrame, conclusion_index: Union[int, List[int]] = -1, features_description: dict = None) -> List[Rule]:
     """
     Generate a decision tree using the C4.5 algorithm and convert it to a list of Rule objects.
 
