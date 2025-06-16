@@ -12,6 +12,10 @@ Turning even small models, such as those with just 3 billion parameters, into a 
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](License)
 
+<p align="center">
+  <img src="images/dependency_overview.png" alt="Solution" width="600"/>
+</p>
+
 ### Problem and Solution
 
 The **Business Rules Reasoning System** addresses the challenge of integrating logical reasoning capabilities into Large Language Models (LLMs). While LLMs are powerful tools for natural language understanding and generation, they lack inherent logical reasoning capabilities and often struggle with tasks requiring strict adherence to predefined rules or knowledge bases. This system bridges that gap by combining the structured reasoning of rule-based systems with the flexibility of LLMs. It enables transparent and explainable decision-making processes, making it suitable for business automation and other domains requiring logical consistency.
@@ -36,6 +40,8 @@ Despite this challenge, the system significantly **offloads the risk of hallucin
 - **Error Handling**: Handles incomplete or conflicting data gracefully, ensuring robust reasoning processes.
 - **Customizable Options**: Offers configurable options for variable fetching modes, reasoning methods, and workflow behaviors.
 - **State Serialization**: The state of the reasoning process is fully serializable to JSON, enabling easy storage, retrieval, and debugging.
+- **Multiple knowledge representations**: This library allows to declare the knowledge base using: RuleSet builder, Decision tables defined in Pandas, Decision trees.
+- **Knowledge representation converters**: It is possible to use converters to switch between Decision tables, Decision trees and Rules.
 
 # Documentation
 ## Table of content
@@ -58,6 +64,10 @@ Despite this challenge, the system significantly **offloads the risk of hallucin
     - [Reasoning Process](#reasoning-process)
     - [Reasoning Method](#reasoning-method)
     - [Reasoning Service](#reasoning-service)
+  - [Supported knowledge base representations](#supported-knowledge-base-representations)
+    - [Business rules](#business-rules)
+    - [Decision tables](#decision-tables)
+    - [Decision trees](#decision-trees)
   - [LLM Orchestrator](#llm-orchestrator)
     - [LLMOrchestrator](#llmorchestrator)
     - [LLMPipelineBase and HuggingFacePipeline](#llmpipelinebase-and-huggingfacepipeline)
@@ -69,6 +79,7 @@ Despite this challenge, the system significantly **offloads the risk of hallucin
     - [Preparing a document example](#preparing-a-document-example)
     - [Initialising the HuggingFace orchestrator](#initialising-the-huggingface-orchestrator)
     - [Querying the orchestrator and tracing the inference log](#querying-the-orchestrator-and-tracing-the-inference-log)
+  - [Model evaluation](#model-evaluation)
   - [Authors](#authors)
   - [References](#references)
 
@@ -126,6 +137,21 @@ predicate = PredicateBuilder() \
     .configure_predicate("age", OperatorType.GREATER_OR_EQUAL, 18) \
     .set_left_term_value(23)  # optional for left term
     .unwrap()
+```
+
+It can also be represented as a decision table using Pandas. Each row is a rule, and each column is a variable or conclusion.
+
+**Example:**
+```python
+import pandas as pd
+from business_rules_reasoning.deductive.decision_table import pandas_to_rules
+
+data = {
+    "age": [">=18", "<18"],
+    "passenger": ["adult", "child"]
+}
+df = pd.DataFrame(data)
+rules = pandas_to_rules(df, conclusion_index=-1)
 ```
 
 ### Rules
@@ -325,6 +351,34 @@ knowledge_base = KnowledgeBaseBuilder() \
     .unwrap()
 ```
 
+Alternatively, it is possible to build the same knowledge base using a decision table and convert it to rules:
+
+```python
+import pandas as pd
+from business_rules_reasoning.deductive.decision_table import pandas_to_rules
+from business_rules_reasoning.deductive import KnowledgeBaseBuilder
+
+# Define the decision table as a DataFrame
+data = {
+    "age": [">=18", "<18", "<5"],
+    "passenger": ["adult", "child", "toddler"]
+}
+df = pd.DataFrame(data)
+
+# Convert the decision table to rules
+rules = pandas_to_rules(df, conclusion_index=-1)
+
+# Build the knowledge base from the rules
+knowledge_base = KnowledgeBaseBuilder() \
+    .set_id("knowledgeBase1") \
+    .set_name("Knowledge Base 1") \
+    .set_description("Passengers type principles") \
+    .add_rules(rules) \
+    .unwrap()
+```
+
+This approach allows to define rules in a tabular format and easily convert them into a knowledge base for reasoning.
+
 ### Variables and supported values
 
 Variables are the smallest units. Both Terms and Conclusions are instances of a Variable type.
@@ -397,6 +451,59 @@ A service that contains all procedures for reasoning:
 - **analyze_variables_frequency**: Analyzes the frequency of variables across all rules to prioritize missing variables during reasoning.
 - **deduction**: Executes the deduction reasoning method, evaluating rules to derive conclusions based on the provided facts.
 - **hypothesis_testing**: Executes the hypothesis testing reasoning method, validating a specific hypothesis against the rules and provided facts.
+
+## Supported knowledge base representations
+
+The Business Rules Reasoning System supports multiple ways to represent and construct knowledge bases, making it flexible for different user needs and integration scenarios.
+
+### Business rules (Rule Builder)
+
+The most expressive and programmatic way to define a knowledge base is using the Rule Builder API. This approach allows you to construct rules using Python code, chaining together predicates and conclusions. Each rule is built from predicates (conditions) and a conclusion, and you can use the builder pattern to fluently define complex logic.
+
+**Example:**
+```python
+from business_rules_reasoning.deductive import RuleBuilder, VariableBuilder, PredicateBuilder
+from business_rules_reasoning import OperatorType
+
+rule = RuleBuilder() \
+    .set_conclusion(VariableBuilder().set_id("loan_approved").set_value(True).unwrap()) \
+    .add_predicate(PredicateBuilder().configure_predicate("age", OperatorType.GREATER_OR_EQUAL, 18).unwrap()) \
+    .unwrap()
+```
+This approach is ideal for developers who want full control and flexibility in defining business logic.
+
+### Decision tables (Python/Pandas)
+
+Decision tables provide a tabular way to represent rules, where each row is a rule and each column is a variable (predicate or conclusion). It is possible to define a decision table as a Pandas DataFrame, and then use the `pandas_to_rules` converter to automatically generate a list of rules from the table.
+
+**Example:**
+```python
+import pandas as pd
+from business_rules_reasoning.deductive.decision_table import pandas_to_rules
+
+data = {
+    "age": ["<18", ">=18", "between(30,40)"],
+    "income": [">5000", "<=5000", "is_in(3000,4000,5000)"],
+    "loan_approved": [False, True, True]
+}
+df = pd.DataFrame(data)
+rules = pandas_to_rules(df, conclusion_index=[-1])
+```
+This method is especially useful for business analysts or domain experts who prefer working with spreadsheets or tabular data.
+
+### Decision trees (C4.5 algorithm)
+
+The system also supports generating rules from decision trees using the C4.5 algorithm. It is possible to build a decision tree from a Pandas DataFrame using the `c45_decision_tree` function, and then convert the tree to a set of rules with `tree_to_rules`.
+The C4.5 alghoritm builds decision trees from a set of training data. The training data does not need to be optimized. The optimized rules are being generated.
+
+**Example:**
+```python
+from business_rules_reasoning.deductive.decision_table.c45_decision_tree import c45_decision_tree, tree_to_rules
+
+tree = c45_decision_tree(df, conclusion_index=[-1])
+rules = tree_to_rules(tree, target="loan_approved", path=[])
+```
+This approach is useful for scenarios where it is mopre efficient to extract interpretable rules from data-driven decision trees, combining the strengths of machine learning and symbolic reasoning.
 
 ## LLM Orchestrator
 
@@ -550,6 +657,77 @@ def inference_state_retriever(inference_id: str) -> dict:
     return {}
 ```
 
+*** OR alternatively (Example in ApacheSpark) ***
+
+```sql
+CREATE OR REPLACE TABLE leasing_document_decision_table (
+    unpaid_loans STRING COMMENT "Indicates if there are any open un-paid loans: 'yes' or 'no'",
+    fraud_flag STRING COMMENT "Indicates if the fraud database has any records: 'yes' or 'no'",
+    employment_type STRING COMMENT "Employment Type option from: [freelancer, company emplyoee, unemployed]",
+    monthly_net_salary STRING COMMENT "Monthly Net Salary",
+    thirty_percent_ruling STRING COMMENT "30% Ruling - 'yes' if applicable othwerwise 'no'",
+    previous_loans STRING COMMENT "Indicates if there were any historical paid loans",
+    ongoing_loans STRING COMMENT "Indicates whether there is any open loans",
+    loan_accepted BOOLEAN COMMENT "Loan Accepted",
+    forward_to_bank_verification BOOLEAN COMMENT "Forward to additional bank verification"
+)
+COMMENT "Knowledge base for processing leasing documents";
+
+INSERT INTO leasing_document_decision_table VALUES
+    ('True', NULL, NULL, NULL, NULL, NULL, NULL, False, NULL),
+    (NULL, 'True', NULL, NULL, NULL, NULL, NULL, False, NULL),
+    (NULL, NULL, 'unemployed', NULL, NULL, NULL, NULL, False, NULL),
+    (NULL, NULL, NULL, '<2000', NULL, NULL, NULL, False, NULL),
+    ('False', 'False', '!=unemployed', '>=2000', NULL, NULL, NULL, True, NULL),
+    (NULL, NULL, 'freelancer', NULL, NULL, NULL, NULL, NULL, True),
+    (NULL, NULL, NULL, NULL, 'True', NULL, NULL, NULL, True),
+    (NULL, NULL, NULL, NULL, NULL, 'False', 'False', NULL, True);
+```
+
+```python
+from business_rules_reasoning.base import KnowledgeBase
+from business_rules_reasoning.deductive import KnowledgeBaseBuilder
+from business_rules_reasoning.deductive.decision_table import pandas_to_rules
+from business_rules_reasoning.orchestrator import OrchestratorOptions
+from business_rules_reasoning.orchestrator.llm import HuggingFacePipeline, LLMOrchestrator
+
+def knowledge_base_retriever_from_tables() -> list[KnowledgeBase]:
+    # Define the decision tables and determine conclusion column indexes
+    tables = [
+        { "name": 'leasing_document_decision_table', "conclusions": [-2, -1] }
+    ]
+    knowledge_bases = []
+
+    for table in tables:
+        table_name = table["name"]
+        query = f"SELECT * FROM {table_name}"
+        df = spark.sql(query)
+
+        pandas_df = df.toPandas()
+
+        # Extract column names and comments into a dictionary
+        columns_query = f"DESCRIBE TABLE {table_name}"
+        columns_df = spark.sql(columns_query)
+        features_description = {row['col_name']: row['comment'] for row in columns_df.collect() if row['comment']}
+
+        # Extract table comment
+        table_comment_query = f"DESCRIBE TABLE EXTENDED {table_name}"
+        table_comment_df = spark.sql(table_comment_query)
+        table_comment = table_comment_df.filter(table_comment_df.col_name == "Comment").select("data_type").collect()
+        table_description = table_comment[0]["data_type"] if table_comment else f"Knowledge base for {table_name}"
+
+        # Generate rule sets from the Pandas DataFrame
+        rules = pandas_to_rules(pandas_df, conclusion_index=table["conclusions"], features_description=features_description)
+
+        # Pass the rules to the KnowledgeBase
+        kb_builder = KnowledgeBaseBuilder().set_id(table_name).set_name(f"Knowledge Base for {table_name}").set_description(table_description)
+        for rule in rules:
+            kb_builder.add_rule(rule)
+        knowledge_bases.append(kb_builder.unwrap())
+
+    return knowledge_bases
+```
+
 ### Displaying business rules
 
 Once the knowledge base is built, you can display the rules and their structure using the `display()` method of the `KnowledgeBase` class. This provides a human-readable representation of the rules, including their predicates and conclusions, which is useful for debugging and validation.
@@ -613,7 +791,7 @@ First lets download a model from HuggingFace. Let if be the Llama 3.2 3B Instruc
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "meta-llama/Llama-3.2-3B-Instruct"
+model_name = "meta-llama/Llama-3.1-8B-Instruct"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 ```
@@ -729,6 +907,20 @@ Response:
 [Orchestrator]: Changing status from OrchestratorStatus.ENGINE_WAITING_FOR_VARIABLES to OrchestratorStatus.INFERENCE_FINISHED.
 [Orchestrator]: Prompting for answer generation...
 ```
+
+## Model evaluation
+
+Model evaluation for this reasoning system was performed using Databricks model evaluation workflows. All test cases were executed as internal agent requests, ensuring that the reasoning engine and orchestrator were thoroughly validated in a controlled environment. The evaluation code, including batch prompt execution and dataset initialization, can be found in the `model_evaluation` folder of this repository.
+
+All test cases passed successfully, demonstrating the robustness and correctness of the reasoning process and LLM orchestration. Please note that the examples and test cases provided in this repository are abstract and intended solely for demonstration and educational purposes. They do not represent any real company business logic or production decision rules.
+
+<p align="center">
+  <img src="images/test_case_correctness.png" alt="Test Case Correctness" width="600"/>
+</p>
+
+<p align="center">
+  <img src="images/internal_conversation_relevance_tests.png" alt="Internal Conversation Relevance Tests" width="600"/>
+</p>
 
 ## Authors
 - Lukasz Wardzala - [github](https://github.com/lwardzala)

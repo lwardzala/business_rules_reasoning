@@ -1,7 +1,7 @@
 import unittest
 from src.business_rules_reasoning.json_deserializer import deserialize_reasoning_process, deserialize_knowledge_base
 from src.business_rules_reasoning.base import ReasoningProcess, KnowledgeBase, Rule, Variable, OperatorType
-from src.business_rules_reasoning.deductive import DeductivePredicate
+from src.business_rules_reasoning.deductive import DeductivePredicate, DeductiveConclusion
 from src.business_rules_reasoning.base.reasoning_enums import ReasoningState, EvaluationMessage, ReasoningMethod, ReasoningType
 from src.business_rules_reasoning.json_serializer import serialize_reasoning_process, serialize_knowledge_base
 
@@ -14,7 +14,7 @@ class TestJsonDeserializer(unittest.TestCase):
         adult_predicate = DeductivePredicate(left_term=age_variable, right_term=Variable(value=20), operator=OperatorType.GREATER_OR_EQUAL)
 
         # Create rules
-        adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
+        adult_rule = Rule(conclusion=DeductiveConclusion(Variable('conclusion', '', 20)), predicates=[adult_predicate])
 
         # Create knowledge base
         knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
@@ -25,6 +25,7 @@ class TestJsonDeserializer(unittest.TestCase):
         reasoning_process.state = ReasoningState.INITIALIZED
         reasoning_process.reasoned_items = []
         reasoning_process.evaluation_message = EvaluationMessage.NONE
+        reasoning_process.options = {"hypothesis": Variable(id="hypothesis", name="Hypothesis", value=True)}
 
         # Serialize and deserialize reasoning process
         serialized = serialize_reasoning_process(reasoning_process)
@@ -45,7 +46,7 @@ class TestJsonDeserializer(unittest.TestCase):
         adult_predicate = DeductivePredicate(left_term=age_variable, right_term=Variable(value=20), operator=OperatorType.GREATER_OR_EQUAL)
 
         # Create rules
-        adult_rule = Rule(conclusion=adult_predicate, predicates=[adult_predicate])
+        adult_rule = Rule(conclusion=DeductiveConclusion(Variable('conclusion', 'conclusion', 20)), predicates=[adult_predicate])
 
         # Create knowledge base
         knowledge_base = KnowledgeBase(id="age_classification", name="Age Classification", description="Classify age into categories", reasoning_type=ReasoningType.CRISP)
@@ -59,8 +60,7 @@ class TestJsonDeserializer(unittest.TestCase):
         self.assertEqual(deserialized.name, "Age Classification")
         self.assertEqual(deserialized.description, "Classify age into categories")
         self.assertEqual(len(deserialized.rule_set), 1)
-        self.assertEqual(deserialized.rule_set[0].conclusion.left_term.name, "Age")
-        self.assertEqual(deserialized.rule_set[0].conclusion.operator, OperatorType.GREATER_OR_EQUAL)
+        self.assertEqual(deserialized.rule_set[0].conclusion.get_variable().name, "conclusion")
 
 if __name__ == '__main__':
     unittest.main()

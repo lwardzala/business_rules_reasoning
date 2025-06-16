@@ -100,6 +100,14 @@ class BaseOrchestrator(ABC):
         if self.reasoning_process.state == ReasoningState.FINISHED:
             self.reset_orchestration() # TODO: think about: start new orchestration or stay in finished state?
         return
+    
+    def _reset_engine(self):
+        if self.reasoning_process is None:
+            raise ValueError("Reasoning process is not initialized. Cannot reset the engine.")
+        
+        service = self.get_reasoning_service()
+        self.reasoning_process = service.clear_reasoning(self.reasoning_process)
+        self._log_inference(f"[Engine]: Reasoning process was cleared. Status: {self.reasoning_process.state}")
 
     def get_reasoning_service(self) -> ReasoningService:
         if self.reasoning_process.knowledge_base.reasoning_type == ReasoningType.CRISP:
@@ -147,6 +155,13 @@ class BaseOrchestrator(ABC):
         return {
             "inference_session_id": self.inference_session_id,
             "response": response,
-            "reasoning_process": serialize_reasoning_process(self.reasoning_process),
-            "inference_log": self.inference_logger.get_log()
+            "reasoning_process": json.loads(serialize_reasoning_process(self.reasoning_process)),
+            "inference_log": self.inference_logger.get_log(),
+            "orchestrator_status": self.status.name,
+            "orchestrator_options": {
+                "variables_fetching": self.options.variables_fetching.name,
+                "conclusion_as_fact": self.options.conclusion_as_fact,
+                "pass_conclusions_as_arguments": self.options.pass_conclusions_as_arguments,
+                "pass_facts_as_arguments": self.options.pass_facts_as_arguments
+            }
         } if return_full_context else response
