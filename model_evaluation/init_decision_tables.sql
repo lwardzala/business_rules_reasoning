@@ -11,7 +11,7 @@ CREATE OR REPLACE TABLE leasing_document_decision_table (
 )
 COMMENT "Knowledge base for processing leasing documents";
 
-INSERT INTO zenchef_datalake.test.leasing_document_decision_table VALUES
+INSERT INTO leasing_document_decision_table VALUES
     ('True', NULL, NULL, NULL, NULL, NULL, NULL, False, NULL),
     (NULL, 'True', NULL, NULL, NULL, NULL, NULL, False, NULL),
     (NULL, NULL, 'unemployed', NULL, NULL, NULL, NULL, False, NULL),
@@ -29,7 +29,7 @@ CREATE OR REPLACE TABLE stock_decision_rules (
 )
 COMMENT "stock action decisions based on a report";
 
-INSERT INTO zenchef_datalake.test.stock_decision_rules VALUES
+INSERT INTO stock_decision_rules VALUES
   ('<15', 'is_in(positive, neutral)', '<=0.2', 'BUY'),
   ('between(15, 25)', 'is_in(positive)', '<=0.3', 'HOLD'),
   ('>25', 'is_in(negative)', '>0.3', 'SELL');
