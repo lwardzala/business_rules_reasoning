@@ -87,12 +87,12 @@ Despite this challenge, the system significantly **offloads the risk of hallucin
 
 https://pypi.org/project/business-rules-reasoning/
 
-The business_rules_reasoning library contains the engine of the Reasoning System and the LLM orchestrator.
+The business-rules-reasoning library contains the engine of the Reasoning System and the LLM orchestrator.
 
 ### Installation
 
 ```bash
-pip install business_rules_reasoning
+pip install business-rules-reasoning
 ```
 
 ### Predicates
